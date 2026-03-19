@@ -7,6 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "competition:email-preview": "node scripts/previewWinnerEmail.mjs",
+    "competition:report-preview": "node scripts/previewWinnerReport.mjs",
     "competition:finalize": "node scripts/finalizeWeeklyCompetition.mjs"
   },
   "devDependencies": {

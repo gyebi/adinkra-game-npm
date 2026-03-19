@@ -48,6 +48,15 @@ service cloud.firestore {
           request.resource.data.rewardRank == null ||
           request.resource.data.rewardRank is number
         )
+        && (
+          !("rewardAmount" in request.resource.data) ||
+          request.resource.data.rewardAmount == null ||
+          request.resource.data.rewardAmount is number
+        )
+        && (
+          !("finalizedAt" in request.resource.data) ||
+          request.resource.data.finalizedAt == null
+        )
         && request.resource.data.keys().hasOnly([
           'uid',
           'playerName',
@@ -58,14 +67,18 @@ service cloud.firestore {
           'weekEndingDate',
           'rewardStatus',
           'rewardRank',
+          'rewardAmount',
           'createdAt',
-          'updatedAt'
+          'updatedAt',
+          'finalizedAt'
         ]);
     }
 
     function preservesRewardDecision() {
       return request.resource.data.rewardStatus == resource.data.rewardStatus
         && request.resource.data.rewardRank == resource.data.rewardRank
+        && request.resource.data.rewardAmount == resource.data.rewardAmount
+        && request.resource.data.finalizedAt == resource.data.finalizedAt
         && request.resource.data.email == resource.data.email
         && request.resource.data.weekEndingDate == resource.data.weekEndingDate
         && request.resource.data.uid == resource.data.uid;
@@ -86,7 +99,9 @@ service cloud.firestore {
       allow create: if isCompetitionDocumentOwner()
         && hasValidCompetitionFields()
         && request.resource.data.rewardStatus == 'pending'
-        && request.resource.data.rewardRank == null;
+        && request.resource.data.rewardRank == null
+        && request.resource.data.rewardAmount == null
+        && request.resource.data.finalizedAt == null;
       allow update: if isCompetitionDocumentOwner()
         && hasValidCompetitionFields()
         && preservesRewardDecision();
