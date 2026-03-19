@@ -199,14 +199,15 @@ export async function saveCompetitionEntry({
 }
 
 export async function getCompetitionLeaders(
-  weekEndingDate = getCompetitionWeekEndingDate()
+  weekEndingDate = getCompetitionWeekEndingDate(),
+  maxEntries = 10
 ) {
   const competitionQuery = query(
     collection(db, COMPETITION_COLLECTION),
     where("weekEndingDate", "==", weekEndingDate),
     orderBy("completionTimeSeconds", "asc"),
     orderBy("attempts", "asc"),
-    limit(3)
+    limit(maxEntries)
   );
   const snapshot = await getDocs(competitionQuery);
 
@@ -214,4 +215,29 @@ export async function getCompetitionLeaders(
     id: entry.id,
     ...entry.data()
   }));
+}
+
+export async function getCompetitionLeaderboardData(
+  uid,
+  weekEndingDate = getCompetitionWeekEndingDate()
+) {
+  const competitionQuery = query(
+    collection(db, COMPETITION_COLLECTION),
+    where("weekEndingDate", "==", weekEndingDate),
+    orderBy("completionTimeSeconds", "asc"),
+    orderBy("attempts", "asc")
+  );
+  const snapshot = await getDocs(competitionQuery);
+  const rankedEntries = snapshot.docs.map((entry, index) => ({
+    id: entry.id,
+    rank: index + 1,
+    ...entry.data()
+  }));
+
+  return {
+    topEntries: rankedEntries.slice(0, 10),
+    currentPlayer: uid
+      ? rankedEntries.find((entry) => entry.uid === uid) ?? null
+      : null
+  };
 }

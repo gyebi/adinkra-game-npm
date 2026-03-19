@@ -23,7 +23,8 @@ body {
 
 #intro-screen,
 #game-screen,
-#results-screen {
+#results-screen,
+#competition-screen {
   width: min(100%, 460px);
   margin: 0 auto;
 }
@@ -145,6 +146,20 @@ body {
   transition: all 0.25s ease;
 }
 
+#competition-results-btn {
+  margin: 0 auto 20px;
+  padding: 10px 24px;
+  font-size: 0.95rem;
+  border-radius: 30px;
+  border: 1px solid #155e63;
+  background: rgba(255, 255, 255, 0.86);
+  color: #155e63;
+  cursor: pointer;
+  display: block;
+  width: min(100%, 240px);
+  transition: all 0.25s ease;
+}
+
 #show-intro-btn:hover {
   background: #7a4a1f;
   color: #fff;
@@ -155,11 +170,20 @@ body {
   color: #fff;
 }
 
+#competition-results-btn:hover {
+  background: #155e63;
+  color: #fff;
+}
+
 #show-intro-btn:active {
   transform: scale(0.97);
 }
 
 #results-intro-btn:active {
+  transform: scale(0.97);
+}
+
+#competition-results-btn:active {
   transform: scale(0.97);
 }
 
@@ -385,6 +409,10 @@ footer {
   align-items: center;
 }
 
+.competition-shell h1 {
+  margin: 0 0 6px;
+}
+
 .competition-symbol-stack {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -597,6 +625,29 @@ footer {
   margin: 0;
   font-size: 0.92rem;
   line-height: 1.5;
+}
+
+.competition-player-rank {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(199, 141, 44, 0.14);
+}
+
+.competition-player-rank-label {
+  margin: 0 0 10px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--clay);
+}
+
+.competition-player-rank-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: center;
 }
 
 .game-instructions {

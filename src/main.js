@@ -80,63 +80,66 @@ document.querySelector("#app").innerHTML = `
 
       <div id="leaderboard" class="results-leaderboard hidden"></div>
 
-      <section id="competition-panel" class="competition-panel hidden">
-        <div class="competition-panel-header">
-          <div class="competition-symbol-stack" aria-hidden="true">
-            <img src="${gyeNyameSymbol}" alt="" />
-            <img src="${akomaSymbol}" alt="" />
-            <img src="${ayaSymbol}" alt="" />
-          </div>
-          <div>
-            <p class="competition-kicker">Weekly Challenge</p>
-            <h2>Enter The Saturday Reward Race</h2>
-          </div>
-        </div>
-
-        <p id="competition-message" class="competition-message">
-          Opt in with your verified email to compete for this week&apos;s rewards.
-        </p>
-
-        <div class="competition-rewards" aria-label="Competition rewards">
-          <article class="competition-reward">
-            <span class="competition-reward-place">1st</span>
-            <strong>100 Cedis</strong>
-          </article>
-          <article class="competition-reward">
-            <span class="competition-reward-place">2nd</span>
-            <strong>50 Cedis</strong>
-          </article>
-          <article class="competition-reward">
-            <span class="competition-reward-place">3rd</span>
-            <strong>20 Cedis</strong>
-          </article>
-        </div>
-
-        <div id="competition-email-form" class="competition-entry">
-          <input
-            id="competitionEmailInput"
-            type="email"
-            placeholder="Enter email for the weekly challenge"
-            autocomplete="email"
-          />
-          <button id="competitionOptInBtn">Send Verification Link</button>
-        </div>
-
-        <div id="competition-linked-actions" class="competition-linked hidden">
-          <p id="competition-linked-email"></p>
-          <button id="competitionConfirmBtn">Use Verified Email For Competition</button>
-        </div>
-
-        <p class="competition-footnote">
-          Open the verification link on this same device to keep your game identity and weekly entry.
-        </p>
-
-        <div id="competitionLeaderboard" class="competition-board"></div>
-      </section>
-
       <div class="results-actions">
+        <button id="enter-competition-btn" class="skip-intro-btn hidden">Enter Competition</button>
         <button id="play-again-btn" class="skip-intro-btn">Play Again</button>
         <button id="results-intro-btn">View Intro</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="competition-screen" class="hidden">
+    <div class="results-shell competition-shell">
+      <p class="results-kicker">Weekly Challenge</p>
+      <div class="competition-panel-header">
+        <div class="competition-symbol-stack" aria-hidden="true">
+          <img src="${gyeNyameSymbol}" alt="" />
+          <img src="${akomaSymbol}" alt="" />
+          <img src="${ayaSymbol}" alt="" />
+        </div>
+        <div>
+          <h1>Competition Leaderboard</h1>
+          <p class="competition-message" id="competition-message">
+            Verify your email to enter this week&apos;s competition. Only verified entries appear here.
+          </p>
+        </div>
+      </div>
+
+      <div class="competition-rewards" aria-label="Competition rewards">
+        <article class="competition-reward">
+          <span class="competition-reward-place">1st</span>
+          <strong>100 Cedis</strong>
+        </article>
+        <article class="competition-reward">
+          <span class="competition-reward-place">2nd</span>
+          <strong>50 Cedis</strong>
+        </article>
+        <article class="competition-reward">
+          <span class="competition-reward-place">3rd</span>
+          <strong>20 Cedis</strong>
+        </article>
+      </div>
+
+      <div id="competition-email-form" class="competition-entry">
+        <input
+          id="competitionEmailInput"
+          type="email"
+          placeholder="Enter email for the weekly challenge"
+          autocomplete="email"
+        />
+        <button id="competitionOptInBtn">Send Verification Email</button>
+      </div>
+
+      <p class="competition-footnote">
+        Confirmation happens in your inbox. After you verify, your entry is added automatically and the leaderboard updates.
+      </p>
+
+      <div id="competitionLeaderboard" class="competition-board"></div>
+      <div id="competition-player-rank" class="competition-player-rank hidden"></div>
+
+      <div class="results-actions">
+        <button id="competition-play-again-btn" class="skip-intro-btn">Play Again</button>
+        <button id="competition-results-btn">Back To Results</button>
       </div>
     </div>
   </div>
