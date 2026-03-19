@@ -1,7 +1,9 @@
-import { db } from "../firebase";
+import { db } from "../firebase.js";
 import {
+  doc,
+  setDoc,
+  getDoc,
   collection,
-  addDoc,
   serverTimestamp,
   query,
   orderBy,
@@ -11,21 +13,69 @@ import {
 
 // Save a score
 export async function saveScore({
+  userId,
   playerName,
   completionTimeSeconds,
   attempts
 }) {
-  try {
-    await addDoc(collection(db, "leaderboard"), {
-      playerName,
-      completionTimeSeconds,
-      attempts,
-      createdAt: serverTimestamp()
-    });
+  if (!userId) {
+    console.error("❌ Error saving score: missing userId");
+    return false;
+  }
 
-    console.log("✅ Score saved");
+  try {
+    // 📅 Get today's date
+    const today = new Date().toISOString().split("T")[0];
+
+    // 🆔 Unique doc ID (one per user per day)
+    const docId = `${userId}_${today}`;
+
+    const scoreRef = doc(db, "leaderboard", docId);
+
+    const existingDoc = await getDoc(scoreRef);
+
+    // ✅ CASE 1: No existing score → SAVE
+    if (!existingDoc.exists()) {
+      await setDoc(scoreRef, {
+        userId,
+        playerName,
+        completionTimeSeconds,
+        attempts,
+        date: today,
+        createdAt: serverTimestamp()
+      });
+
+      console.log("✅ New score saved");
+      return true;
+    }
+  
+  // ✅ CASE 2: Compare scores
+    const oldData = existingDoc.data();
+
+    const isBetter =
+      completionTimeSeconds < oldData.completionTimeSeconds ||
+      (completionTimeSeconds === oldData.completionTimeSeconds &&
+        attempts < oldData.attempts);
+
+    if (isBetter) {
+      await setDoc(scoreRef, {
+        userId,
+        playerName,
+        completionTimeSeconds,
+        attempts,
+        date: today,
+        createdAt: serverTimestamp()
+      });
+
+      console.log("🔁 Score improved and updated");
+      return true;
+    } else {
+      console.log("⛔ Score not better — ignored");
+      return true;
+    }
   } catch (error) {
     console.error("❌ Error saving score:", error);
+    return false;
   }
 }
 

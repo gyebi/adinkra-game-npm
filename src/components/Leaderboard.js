@@ -1,4 +1,4 @@
-import { getTopScores } from "../services/leaderboardService";
+import { getTopScores } from "../services/leaderboardService.js";
 
 export async function renderLeaderboard() {
   const container = document.getElementById("leaderboard");

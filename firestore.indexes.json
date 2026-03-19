@@ -1,0 +1,23 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "competitionEntries",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "weekEndingDate",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "completionTimeSeconds",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "attempts",
+          "order": "ASCENDING"
+        }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

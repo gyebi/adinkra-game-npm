@@ -1,0 +1,96 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isNonEmptyString(value, maxLength) {
+      return value is string && value.size() > 0 && value.size() <= maxLength;
+    }
+
+    function isLeaderboardDocumentOwner() {
+      return isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.id == request.auth.uid + "_" + request.resource.data.date;
+    }
+
+    function hasValidLeaderboardFields() {
+      return isNonEmptyString(request.resource.data.playerName, 24)
+        && request.resource.data.completionTimeSeconds is number
+        && request.resource.data.attempts is number
+        && isNonEmptyString(request.resource.data.date, 10)
+        && request.resource.data.keys().hasOnly([
+          'userId',
+          'playerName',
+          'completionTimeSeconds',
+          'attempts',
+          'date',
+          'createdAt'
+        ]);
+    }
+
+    function isCompetitionDocumentOwner() {
+      return isSignedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.id == request.auth.uid + "_" + request.resource.data.weekEndingDate;
+    }
+
+    function hasValidCompetitionFields() {
+      return isNonEmptyString(request.resource.data.playerName, 24)
+        && isNonEmptyString(request.resource.data.email, 320)
+        && request.resource.data.emailVerified == true
+        && request.resource.data.completionTimeSeconds is number
+        && request.resource.data.attempts is number
+        && isNonEmptyString(request.resource.data.weekEndingDate, 10)
+        && request.resource.data.rewardStatus is string
+        && (
+          request.resource.data.rewardRank == null ||
+          request.resource.data.rewardRank is number
+        )
+        && request.resource.data.keys().hasOnly([
+          'uid',
+          'playerName',
+          'email',
+          'emailVerified',
+          'completionTimeSeconds',
+          'attempts',
+          'weekEndingDate',
+          'rewardStatus',
+          'rewardRank',
+          'createdAt',
+          'updatedAt'
+        ]);
+    }
+
+    function preservesRewardDecision() {
+      return request.resource.data.rewardStatus == resource.data.rewardStatus
+        && request.resource.data.rewardRank == resource.data.rewardRank
+        && request.resource.data.email == resource.data.email
+        && request.resource.data.weekEndingDate == resource.data.weekEndingDate
+        && request.resource.data.uid == resource.data.uid;
+    }
+
+    match /leaderboard/{documentId} {
+      allow read: if true;
+      allow create: if isLeaderboardDocumentOwner() && hasValidLeaderboardFields();
+      allow update: if isLeaderboardDocumentOwner()
+        && hasValidLeaderboardFields()
+        && request.resource.data.date == resource.data.date
+        && request.resource.data.userId == resource.data.userId;
+      allow delete: if false;
+    }
+
+    match /competitionEntries/{entryId} {
+      allow read: if true;
+      allow create: if isCompetitionDocumentOwner()
+        && hasValidCompetitionFields()
+        && request.resource.data.rewardStatus == 'pending'
+        && request.resource.data.rewardRank == null;
+      allow update: if isCompetitionDocumentOwner()
+        && hasValidCompetitionFields()
+        && preservesRewardDecision();
+      allow delete: if false;
+    }
+  }
+}
