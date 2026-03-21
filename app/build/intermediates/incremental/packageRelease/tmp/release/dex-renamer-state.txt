@@ -1,0 +1,4 @@
+#Fri Mar 20 11:05:36 EDT 2026
+base.0=/home/winfred/Documents/dev-files/tutorials-react/adinkra-game-react/app/build/intermediates/dex/release/minifyReleaseWithR8/classes.dex
+renamed.0=classes.dex
+path.0=classes.dex

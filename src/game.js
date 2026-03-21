@@ -7,24 +7,11 @@ import sankofaAkomaImg from "./assets/assets/Sankofa_Akoma.png";
 import sankofaImg from "./assets/assets/Sankofa.png";
 import tamfoBebreImg from "./assets/assets/Tamfo_Bebre.png";
 
-import {
-  completeCompetitionEmailLink,
-  getCurrentUserId,
-  isCompetitionEmailLink,
-  sendCompetitionSignInLink
-} from "./auth.js";
-import { renderCompetitionLeaderboard } from "./components/CompetitionLeaderboard.js";
+import { getCurrentUserId } from "./auth.js";
 import { renderLeaderboard } from "./components/Leaderboard.js";
-import {
-  clearPendingCompetitionEntry,
-  consumeCompetitionFlashMessage,
-  getCompetitionWeekStatus,
-  readPendingCompetitionEntry,
-  saveCompetitionEntry,
-  setCompetitionFlashMessage,
-  stashPendingCompetitionEntry
-} from "./services/competitionService.js";
 import { saveScore } from "./services/leaderboardService.js";
+
+import { saveCompetitionEntry } from "./services/competitionService.js";
 
 const adinkraSymbols = [
   {
@@ -78,15 +65,11 @@ const adinkraSymbols = [
 const gameScreen = document.getElementById("game-screen");
 const introScreen = document.getElementById("intro-screen");
 const resultsScreen = document.getElementById("results-screen");
-const competitionScreen = document.getElementById("competition-screen");
 const skipBtn = document.querySelector(".skip-intro-btn");
 const restartBtn = document.getElementById("restart-btn");
 const showIntroBtn = document.getElementById("show-intro-btn");
 const playAgainBtn = document.getElementById("play-again-btn");
 const resultsIntroBtn = document.getElementById("results-intro-btn");
-const enterCompetitionBtn = document.getElementById("enter-competition-btn");
-const competitionPlayAgainBtn = document.getElementById("competition-play-again-btn");
-const competitionResultsBtn = document.getElementById("competition-results-btn");
 const gameBoard = document.getElementById("game-board");
 const matchedList = document.getElementById("matched-list");
 const playerInput = document.getElementById("playerInput");
@@ -97,10 +80,6 @@ const resultsAttempts = document.getElementById("results-attempts");
 const resultsTime = document.getElementById("results-time");
 const resultsMessage = document.getElementById("results-message");
 const appBanner = document.getElementById("app-banner");
-const competitionMessage = document.getElementById("competition-message");
-const competitionEmailForm = document.getElementById("competition-email-form");
-const competitionEmailInput = document.getElementById("competitionEmailInput");
-const competitionOptInBtn = document.getElementById("competitionOptInBtn");
 
 const matchedSymbols = new Set();
 const cards = [...adinkraSymbols, ...adinkraSymbols];
@@ -112,7 +91,6 @@ let scoreSubmitted = false;
 let gameStartTime = null;
 let timerIntervalId = null;
 let completionTimeSeconds = 0;
-let lastSubmittedScore = null;
 const scoreDisplay = document.createElement("p");
 
 function startGame() {
@@ -247,19 +225,9 @@ function showBanner(message, isError = false) {
   appBanner.classList.toggle("app-banner-error", isError);
 }
 
-function setCompetitionMessage(message, isError = false) {
-  competitionMessage.textContent = message;
-  competitionMessage.classList.toggle("competition-message-error", isError);
-}
-
-function getCompetitionPayload() {
-  return lastSubmittedScore ? { ...lastSubmittedScore } : null;
-}
-
 function showResultsScreen() {
   gameScreen.classList.add("hidden");
   introScreen.classList.add("hidden");
-  competitionScreen.classList.add("hidden");
   resultsScreen.classList.remove("hidden");
   resultsAttempts.textContent = `${attempts}`;
   resultsTime.textContent = `${completionTimeSeconds}s`;
@@ -268,143 +236,7 @@ function showResultsScreen() {
   leaderboardContainer.classList.add("hidden");
   leaderboardContainer.innerHTML = "";
   playerInput.classList.remove("hidden");
-  enterCompetitionBtn.classList.add("hidden");
   playerNameInput.focus();
-}
-
-async function updateCompetitionScreen() {
-  const weekStatus = await getCompetitionWeekStatus();
-
-  await renderCompetitionLeaderboard({
-    currentUserId: lastSubmittedScore?.userId ?? getCurrentUserId()
-  });
-
-  if (weekStatus.status !== "open") {
-    competitionEmailForm.classList.add("hidden");
-    setCompetitionMessage(
-      `This week's competition closed at 8:00 AM Ghana time on ${weekStatus.weekEndingDate}. Winners are locked from the public leaderboard.`
-    );
-    return;
-  }
-
-  competitionEmailForm.classList.remove("hidden");
-  setCompetitionMessage(
-    "Enter your email to join the weekly competition. Verification happens through your inbox, and only verified entries appear here."
-  );
-}
-
-async function showCompetitionScreen() {
-  introScreen.style.display = "none";
-  gameScreen.classList.add("hidden");
-  resultsScreen.classList.add("hidden");
-  competitionScreen.classList.remove("hidden");
-  await updateCompetitionScreen();
-}
-
-async function handleCompetitionEmailRequest() {
-  const payload = getCompetitionPayload();
-  const email = competitionEmailInput.value.trim().toLowerCase();
-
-  if (!payload) {
-    setCompetitionMessage(
-      "Save your score first before entering the weekly competition.",
-      true
-    );
-    return;
-  }
-
-  if (!email) {
-    setCompetitionMessage(
-      "Enter an email address to receive the verification link.",
-      true
-    );
-    return;
-  }
-
-  competitionOptInBtn.disabled = true;
-
-  try {
-    stashPendingCompetitionEntry({
-      ...payload,
-      email
-    });
-    await sendCompetitionSignInLink(email);
-    setCompetitionMessage(
-      "Verification email sent. Your position will show here after you confirm from your inbox."
-    );
-    await showCompetitionScreen();
-  } catch (error) {
-    console.error("❌ Could not send competition email link:", error);
-    setCompetitionMessage(
-      "We could not send the email link. Check the Firebase email-link settings and try again.",
-      true
-    );
-  } finally {
-    competitionOptInBtn.disabled = false;
-  }
-}
-
-async function finalizeCompetitionLinkIfNeeded() {
-  if (!isCompetitionEmailLink()) {
-    return false;
-  }
-
-  try {
-    const linkedUser = await completeCompetitionEmailLink();
-    const pendingEntry = readPendingCompetitionEntry();
-
-    if (!linkedUser || !pendingEntry) {
-      setCompetitionFlashMessage(
-        "Your email was verified, but the weekly competition entry details were missing."
-      );
-      clearPendingCompetitionEntry();
-      return true;
-    }
-
-    const result = await saveCompetitionEntry({
-      uid: linkedUser.uid,
-      playerName: pendingEntry.playerName,
-      email: linkedUser.email,
-      completionTimeSeconds: pendingEntry.completionTimeSeconds,
-      attempts: pendingEntry.attempts,
-      weekEndingDate: pendingEntry.weekEndingDate
-    });
-
-    lastSubmittedScore = {
-      userId: linkedUser.uid,
-      playerName: pendingEntry.playerName,
-      completionTimeSeconds: pendingEntry.completionTimeSeconds,
-      attempts: pendingEntry.attempts,
-      weekEndingDate: pendingEntry.weekEndingDate
-    };
-    clearPendingCompetitionEntry();
-
-    if (!result.ok) {
-      setCompetitionFlashMessage(
-        result.reason === "competition_closed"
-          ? "Your email was verified, but this week's competition had already closed."
-          : "Your email was verified, but we could not save the weekly competition entry."
-      );
-      return true;
-    }
-
-    if (result.status === "unchanged") {
-      setCompetitionFlashMessage(
-        "Email verified. Your earlier weekly competition result is still your best one."
-      );
-      return true;
-    }
-
-    setCompetitionFlashMessage(
-      "Email verified. Your weekly competition entry is active for this Saturday's reward race."
-    );
-  } catch (error) {
-    console.error("❌ Could not finish competition email verification:", error);
-    setCompetitionFlashMessage(error.message);
-    clearPendingCompetitionEntry();
-  }
-
-  return true;
 }
 
 submitScoreBtn.addEventListener("click", async () => {
@@ -425,7 +257,7 @@ submitScoreBtn.addEventListener("click", async () => {
   }
 
   console.log("🧠 Submitting player:", playerName);
-
+/*
   const wasSaved = await saveScore({
     userId,
     playerName,
@@ -438,31 +270,47 @@ submitScoreBtn.addEventListener("click", async () => {
       "We could not save your score right now. Check Firebase auth and Firestore access.";
     return;
   }
+    */
+
+  // Ask player if they want to join competition
+const joinCompetition = confirm(
+  "🏆 Do you want to join the weekly competition?\nTop players win rewards!"
+);
+
+// Always save leaderboard score
+const wasSaved = await saveScore({
+  userId,
+  playerName,
+  completionTimeSeconds,
+  attempts
+});
+
+if (!wasSaved) {
+  resultsMessage.textContent =
+    "We could not save your score right now. Check Firebase auth and Firestore access.";
+  return;
+}
+
+// ⭐ NEW: Save competition entry ONLY if user agrees
+if (joinCompetition) {
+  await saveCompetitionEntry({
+    userId,
+    playerName,
+    completionTimeSeconds,
+    attempts
+  });
+
+  console.log("🏆 Player joined competition");
+}
 
   scoreSubmitted = true;
-
-  try {
-    lastSubmittedScore = {
-      userId,
-      playerName,
-      completionTimeSeconds,
-      attempts,
-      weekEndingDate: (await getCompetitionWeekStatus()).weekEndingDate
-    };
-  } catch (error) {
-    console.error("❌ Could not read competition week status:", error);
-    resultsMessage.textContent =
-      "Your score was saved, but the competition flow could not load right now.";
-    return;
-  }
 
   await renderLeaderboard();
 
   playerInput.classList.add("hidden");
   leaderboardContainer.classList.remove("hidden");
-  enterCompetitionBtn.classList.remove("hidden");
   resultsMessage.textContent =
-    "Your score was saved. Enter the weekly competition or play again.";
+    "Your score was saved. Play again or view the intro.";
 
   console.log("✅ Score submitted from UI");
 });
@@ -494,24 +342,15 @@ function resetGameState() {
   playerNameInput.value = "";
   leaderboardContainer.classList.add("hidden");
   leaderboardContainer.innerHTML = "";
-  competitionScreen.classList.add("hidden");
-  competitionEmailInput.value = "";
-  competitionOptInBtn.disabled = false;
-  enterCompetitionBtn.classList.add("hidden");
-  lastSubmittedScore = null;
   resultsAttempts.textContent = "0";
   resultsTime.textContent = "0s";
   resultsMessage.textContent =
     "Enter your name to see how your performance compares on the leaderboard.";
-  setCompetitionMessage(
-    "Enter your email to join the weekly competition. Verification happens through your inbox."
-  );
 }
 
 function showGameScreen() {
   introScreen.style.display = "none";
   resultsScreen.classList.add("hidden");
-  competitionScreen.classList.add("hidden");
   gameScreen.classList.remove("hidden");
   resetGameState();
   createBoard();
@@ -522,7 +361,6 @@ function showIntroScreen() {
   introScreen.style.display = "block";
   gameScreen.classList.add("hidden");
   resultsScreen.classList.add("hidden");
-  competitionScreen.classList.add("hidden");
 }
 
 function initializeGame() {
@@ -552,50 +390,15 @@ function initializeGame() {
     showIntroScreen();
   });
 
-  enterCompetitionBtn.addEventListener("click", async () => {
-    await showCompetitionScreen();
-  });
+  const introSeen =
+    localStorage.getItem("introSeen") === "true" ||
+    localStorage.getItem("skipIntro") === "true";
 
-  competitionPlayAgainBtn.addEventListener("click", () => {
+  if (introSeen) {
     showGameScreen();
-  });
-
-  competitionResultsBtn.addEventListener("click", () => {
-    if (scoreSubmitted) {
-      competitionScreen.classList.add("hidden");
-      resultsScreen.classList.remove("hidden");
-      return;
-    }
-
-    showGameScreen();
-  });
-
-  competitionOptInBtn.addEventListener("click", () => {
-    handleCompetitionEmailRequest();
-  });
-
-  finalizeCompetitionLinkIfNeeded().then(async (shouldOpenCompetitionScreen) => {
-    const flashMessage = consumeCompetitionFlashMessage();
-
-    if (flashMessage) {
-      showBanner(flashMessage);
-    }
-
-    if (shouldOpenCompetitionScreen) {
-      await showCompetitionScreen();
-      return;
-    }
-
-    const introSeen =
-      localStorage.getItem("introSeen") === "true" ||
-      localStorage.getItem("skipIntro") === "true";
-
-    if (introSeen) {
-      showGameScreen();
-    } else {
-      showIntroScreen();
-    }
-  });
+  } else {
+    showIntroScreen();
+  }
 }
 
 initializeGame();

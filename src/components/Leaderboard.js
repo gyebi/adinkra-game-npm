@@ -17,7 +17,7 @@ export async function renderLeaderboard() {
   scores.forEach((score) => {
     html += `
       <li>
-        ${score.playerName} - ${score.completionTimeSeconds}s - ${score.attempts} attempts
+        ${score.playerName} - ${score.completionTimeSeconds}s - ${score.attempts} attempts - ${score.score} points
       </li>
     `;
   });

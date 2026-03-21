@@ -1,16 +1,6 @@
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  limit,
-  orderBy,
-  query,
-  serverTimestamp,
-  setDoc,
-  where
-} from "firebase/firestore";
-import { db } from "../firebase.js";
+import { db } from "../firebase";
+import { doc, setDoc, getDoc, serverTimestamp } from "firebase.js";
+
 
 const COMPETITION_COLLECTION = "competitionEntries";
 const COMPETITION_WEEKS_COLLECTION = "competitionWeeks";
@@ -240,4 +230,76 @@ export async function getCompetitionLeaderboardData(
       ? rankedEntries.find((entry) => entry.uid === uid) ?? null
       : null
   };
+}
+
+//later inclusions 
+
+
+export async function saveCompetitionEntry({
+  userId,
+  playerName,
+  completionTimeSeconds,
+  attempts
+}) {
+  try {
+    // 📅 Get week ending date (Sunday)
+    const now = new Date();
+    const day = now.getDay();
+    const diff = 7 - day;
+    const sunday = new Date(now);
+    sunday.setDate(now.getDate() + diff);
+
+    const weekEndingDate = sunday.toISOString().split("T")[0];
+
+    const docId = `${userId}_${weekEndingDate}`;
+    const ref = doc(db, "competitionEntries", docId);
+
+    const existing = await getDoc(ref);
+
+    const score = completionTimeSeconds + (attempts * 2);
+
+    if (!existing.exists()) {
+      await setDoc(ref, {
+        uid: userId,
+        playerName,
+        completionTimeSeconds,
+        attempts,
+        score,
+        weekEndingDate,
+        rewardStatus: "pending",
+        rewardRank: null,
+        rewardAmount: null,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        finalizedAt: null
+      });
+
+      console.log("🏆 Competition entry created");
+      return true;
+    }
+
+    // Compare scores
+    const old = existing.data();
+    const oldScore = old.score ?? (old.completionTimeSeconds + old.attempts * 2);
+
+    if (score < oldScore) {
+      await setDoc(ref, {
+        ...old,
+        playerName,
+        completionTimeSeconds,
+        attempts,
+        score,
+        updatedAt: serverTimestamp()
+      });
+
+      console.log("🔁 Competition score improved");
+    } else {
+      console.log("⛔ Not better for competition");
+    }
+
+    return true;
+  } catch (error) {
+    console.error("❌ Competition error:", error);
+    return false;
+  }
 }

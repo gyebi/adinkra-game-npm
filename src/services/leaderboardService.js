@@ -8,7 +8,7 @@ import {
   query,
   orderBy,
   limit,
-  getDocs
+  getDocs,
 } from "firebase/firestore";
 
 // Save a score
@@ -16,7 +16,7 @@ export async function saveScore({
   userId,
   playerName,
   completionTimeSeconds,
-  attempts
+  attempts,
 }) {
   if (!userId) {
     console.error("❌ Error saving score: missing userId");
@@ -34,6 +34,9 @@ export async function saveScore({
 
     const existingDoc = await getDoc(scoreRef);
 
+    //introducing score
+    const score = completionTimeSeconds + attempts * 2;
+
     // ✅ CASE 1: No existing score → SAVE
     if (!existingDoc.exists()) {
       await setDoc(scoreRef, {
@@ -41,21 +44,24 @@ export async function saveScore({
         playerName,
         completionTimeSeconds,
         attempts,
+        score, // ⭐ NEW FIELD
         date: today,
-        createdAt: serverTimestamp()
+        createdAt: serverTimestamp(),
       });
 
       console.log("✅ New score saved");
       return true;
     }
-  
-  // ✅ CASE 2: Compare scores
+
+    // ✅ CASE 2: Compare scores
     const oldData = existingDoc.data();
 
-    const isBetter =
-      completionTimeSeconds < oldData.completionTimeSeconds ||
-      (completionTimeSeconds === oldData.completionTimeSeconds &&
-        attempts < oldData.attempts);
+    const newScore = completionTimeSeconds + attempts * 2;
+
+    const oldScore =
+      oldData.score ?? oldData.completionTimeSeconds + oldData.attempts * 2;
+
+    const isBetter = newScore < oldScore;
 
     if (isBetter) {
       await setDoc(scoreRef, {
@@ -63,8 +69,9 @@ export async function saveScore({
         playerName,
         completionTimeSeconds,
         attempts,
+        score,
         date: today,
-        createdAt: serverTimestamp()
+        createdAt: serverTimestamp(),
       });
 
       console.log("🔁 Score improved and updated");
@@ -84,17 +91,16 @@ export async function getTopScores() {
   try {
     const q = query(
       collection(db, "leaderboard"),
-      orderBy("completionTimeSeconds", "asc"),
-      limit(10)
+      orderBy("score", "asc"),
+      limit(10),
     );
 
     const snapshot = await getDocs(q);
 
-    return snapshot.docs.map(doc => ({
+    return snapshot.docs.map((doc) => ({
       id: doc.id,
-      ...doc.data()
+      ...doc.data(),
     }));
-
   } catch (error) {
     console.error("❌ Error fetching scores:", error);
     return [];
