@@ -38,10 +38,9 @@ service cloud.firestore {
 
     function hasValidCompetitionFields() {
       return isNonEmptyString(request.resource.data.playerName, 24)
-        && isNonEmptyString(request.resource.data.email, 320)
-        && request.resource.data.emailVerified == true
         && request.resource.data.completionTimeSeconds is number
         && request.resource.data.attempts is number
+        && request.resource.data.score is number
         && isNonEmptyString(request.resource.data.weekEndingDate, 10)
         && request.resource.data.rewardStatus is string
         && (
@@ -60,10 +59,9 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly([
           'uid',
           'playerName',
-          'email',
-          'emailVerified',
           'completionTimeSeconds',
           'attempts',
+          'score',
           'weekEndingDate',
           'rewardStatus',
           'rewardRank',
@@ -79,7 +77,6 @@ service cloud.firestore {
         && request.resource.data.rewardRank == resource.data.rewardRank
         && request.resource.data.rewardAmount == resource.data.rewardAmount
         && request.resource.data.finalizedAt == resource.data.finalizedAt
-        && request.resource.data.email == resource.data.email
         && request.resource.data.weekEndingDate == resource.data.weekEndingDate
         && request.resource.data.uid == resource.data.uid;
     }

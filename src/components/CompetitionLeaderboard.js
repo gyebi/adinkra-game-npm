@@ -27,7 +27,7 @@ function renderPlayerRank(container, playerStanding) {
       <span class="competition-board-rank">#${playerStanding.rank}</span>
       <div class="competition-board-player">
         <strong>${playerStanding.playerName}</strong>
-        <span>${playerStanding.completionTimeSeconds}s • ${playerStanding.attempts} attempts</span>
+        <span>${playerStanding.score} pts • ${playerStanding.completionTimeSeconds}s • ${playerStanding.attempts} attempts</span>
       </div>
     </div>
   `;
@@ -81,7 +81,7 @@ export async function renderCompetitionLeaderboard({ currentUserId } = {}) {
             <span class="competition-board-rank">#${entry.rank}</span>
             <div class="competition-board-player">
               <strong>${entry.playerName}</strong>
-              <span>${entry.completionTimeSeconds}s • ${entry.attempts} attempts</span>
+              <span>${entry.score} pts • ${entry.completionTimeSeconds}s • ${entry.attempts} attempts</span>
             </div>
             <span class="competition-board-reward">${rewardLabel}</span>
           </li>

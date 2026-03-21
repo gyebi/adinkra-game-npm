@@ -22,6 +22,7 @@ export function buildWinnerEmail({
   rank,
   weekEndingDate,
   claimUrl,
+  score,
   attempts,
   completionTimeSeconds
 }) {
@@ -37,7 +38,7 @@ export function buildWinnerEmail({
       "",
       `You finished #${rank} on the Adinkra weekly competition leaderboard for the week ending ${weekEndingDate}.`,
       `Reward: ${rewardLabel}`,
-      `Winning score: ${completionTimeSeconds}s and ${attempts} attempts.`,
+      `Winning score: ${score} points (${completionTimeSeconds}s and ${attempts} attempts).`,
       "",
       "To begin reward redemption, open the link below and submit your phone number:",
       claimUrl,
@@ -64,7 +65,7 @@ export function buildWinnerEmail({
               </div>
               <div style="padding: 14px 16px; border-radius: 16px; background: rgba(199, 141, 44, 0.12);">
                 <strong style="display: block; margin-bottom: 4px;">Winning Score</strong>
-                <span>${completionTimeSeconds}s and ${attempts} attempts</span>
+                <span>${score} points • ${completionTimeSeconds}s and ${attempts} attempts</span>
               </div>
             </div>
 

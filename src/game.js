@@ -274,7 +274,7 @@ submitScoreBtn.addEventListener("click", async () => {
 
   // Ask player if they want to join competition
 const joinCompetition = confirm(
-  "🏆 Do you want to join the weekly competition?\nTop players win rewards!"
+  "🏆 Do you want to join the weekly competition?\n\nPrizes:\n1st place - 100 Cedis\n2nd place - 50 Cedis\n3rd place - 20 Cedis"
 );
 
 // Always save leaderboard score

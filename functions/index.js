@@ -61,6 +61,7 @@ function buildWinnerEmailDraft(entryDoc, rank, weekEndingDate) {
     rank,
     weekEndingDate,
     claimUrl: buildClaimUrl(entryDoc.id, weekEndingDate, rank),
+    score: entry.score,
     attempts: entry.attempts,
     completionTimeSeconds: entry.completionTimeSeconds
   });
@@ -74,6 +75,7 @@ function buildWinnerEmailDraft(entryDoc, rank, weekEndingDate) {
     rewardLabel: getRewardLabel(rank),
     entryId: entryDoc.id,
     playerName: entry.playerName,
+    score: entry.score,
     completionTimeSeconds: entry.completionTimeSeconds,
     attempts: entry.attempts,
     sender: "beitlechemtech@gmail.com"
@@ -99,6 +101,7 @@ export const finalizeWeeklyCompetition = onSchedule(
     const entriesSnapshot = await db
       .collection("competitionEntries")
       .where("weekEndingDate", "==", weekEndingDate)
+      .orderBy("score", "asc")
       .orderBy("completionTimeSeconds", "asc")
       .orderBy("attempts", "asc")
       .get();

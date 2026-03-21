@@ -1,17 +1,29 @@
-import { db } from "../firebase";
-import { doc, setDoc, getDoc, serverTimestamp } from "firebase.js";
-
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  limit,
+  orderBy,
+  query,
+  serverTimestamp,
+  setDoc,
+  where
+} from "firebase/firestore";
+import { db } from "../firebase.js";
 
 const COMPETITION_COLLECTION = "competitionEntries";
 const COMPETITION_WEEKS_COLLECTION = "competitionWeeks";
-const PENDING_ENTRY_KEY = "pendingCompetitionEntry";
-const COMPETITION_FLASH_KEY = "competitionFlashMessage";
 
 function formatUtcDateKey(date) {
   const year = date.getUTCFullYear();
   const month = `${date.getUTCMonth() + 1}`.padStart(2, "0");
   const day = `${date.getUTCDate()}`.padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+export function calculateCompetitionScore(completionTimeSeconds, attempts) {
+  return completionTimeSeconds + attempts * 2;
 }
 
 export function getCompetitionWeekContext(date = new Date()) {
@@ -41,44 +53,6 @@ export function getCompetitionEntryId(uid, weekEndingDate) {
   return `${uid}_${weekEndingDate}`;
 }
 
-export function stashPendingCompetitionEntry(entry) {
-  window.localStorage.setItem(PENDING_ENTRY_KEY, JSON.stringify(entry));
-}
-
-export function readPendingCompetitionEntry() {
-  const rawValue = window.localStorage.getItem(PENDING_ENTRY_KEY);
-
-  if (!rawValue) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(rawValue);
-  } catch (error) {
-    console.error("❌ Could not parse pending competition entry:", error);
-    window.localStorage.removeItem(PENDING_ENTRY_KEY);
-    return null;
-  }
-}
-
-export function clearPendingCompetitionEntry() {
-  window.localStorage.removeItem(PENDING_ENTRY_KEY);
-}
-
-export function setCompetitionFlashMessage(message) {
-  window.localStorage.setItem(COMPETITION_FLASH_KEY, message);
-}
-
-export function consumeCompetitionFlashMessage() {
-  const message = window.localStorage.getItem(COMPETITION_FLASH_KEY);
-
-  if (message) {
-    window.localStorage.removeItem(COMPETITION_FLASH_KEY);
-  }
-
-  return message;
-}
-
 export async function getCompetitionWeekStatus(date = new Date()) {
   const context = getCompetitionWeekContext(date);
   const weekRef = doc(db, COMPETITION_WEEKS_COLLECTION, context.weekEndingDate);
@@ -103,14 +77,13 @@ export async function getCompetitionWeekStatus(date = new Date()) {
 }
 
 export async function saveCompetitionEntry({
-  uid,
+  userId,
   playerName,
-  email,
   completionTimeSeconds,
   attempts,
   weekEndingDate = getCompetitionWeekEndingDate()
 }) {
-  if (!uid || !email) {
+  if (!userId) {
     return {
       ok: false,
       reason: "missing_identity"
@@ -126,25 +99,28 @@ export async function saveCompetitionEntry({
     };
   }
 
-  const entryId = getCompetitionEntryId(uid, weekEndingDate);
+  const score = calculateCompetitionScore(completionTimeSeconds, attempts);
+  const entryId = getCompetitionEntryId(userId, weekEndingDate);
   const entryRef = doc(db, COMPETITION_COLLECTION, entryId);
   const existingEntry = await getDoc(entryRef);
 
   if (!existingEntry.exists()) {
     await setDoc(entryRef, {
-      uid,
+      uid: userId,
       playerName,
-      email,
-      emailVerified: true,
       completionTimeSeconds,
       attempts,
+      score,
       weekEndingDate,
       rewardStatus: "pending",
       rewardRank: null,
+      rewardAmount: null,
       createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
+      finalizedAt: null
     });
 
+    console.log("🏆 Competition entry created");
     return {
       ok: true,
       status: "created",
@@ -152,13 +128,21 @@ export async function saveCompetitionEntry({
     };
   }
 
-  const currentBest = existingEntry.data();
-  const improved =
-    completionTimeSeconds < currentBest.completionTimeSeconds ||
-    (completionTimeSeconds === currentBest.completionTimeSeconds &&
-      attempts < currentBest.attempts);
+  const oldData = existingEntry.data();
+  const oldScore = oldData.score ?? calculateCompetitionScore(
+    oldData.completionTimeSeconds,
+    oldData.attempts
+  );
+  const isBetter =
+    score < oldScore ||
+    (score === oldScore &&
+      completionTimeSeconds < oldData.completionTimeSeconds) ||
+    (score === oldScore &&
+      completionTimeSeconds === oldData.completionTimeSeconds &&
+      attempts < oldData.attempts);
 
-  if (!improved) {
+  if (!isBetter) {
+    console.log("⛔ Not better for competition");
     return {
       ok: true,
       status: "unchanged",
@@ -169,18 +153,18 @@ export async function saveCompetitionEntry({
   await setDoc(
     entryRef,
     {
-      uid,
+      uid: userId,
       playerName,
-      email,
-      emailVerified: true,
       completionTimeSeconds,
       attempts,
+      score,
       weekEndingDate,
       updatedAt: serverTimestamp()
     },
     { merge: true }
   );
 
+  console.log("🔁 Competition score improved");
   return {
     ok: true,
     status: "improved",
@@ -195,6 +179,7 @@ export async function getCompetitionLeaders(
   const competitionQuery = query(
     collection(db, COMPETITION_COLLECTION),
     where("weekEndingDate", "==", weekEndingDate),
+    orderBy("score", "asc"),
     orderBy("completionTimeSeconds", "asc"),
     orderBy("attempts", "asc"),
     limit(maxEntries)
@@ -214,6 +199,7 @@ export async function getCompetitionLeaderboardData(
   const competitionQuery = query(
     collection(db, COMPETITION_COLLECTION),
     where("weekEndingDate", "==", weekEndingDate),
+    orderBy("score", "asc"),
     orderBy("completionTimeSeconds", "asc"),
     orderBy("attempts", "asc")
   );
@@ -230,76 +216,4 @@ export async function getCompetitionLeaderboardData(
       ? rankedEntries.find((entry) => entry.uid === uid) ?? null
       : null
   };
-}
-
-//later inclusions 
-
-
-export async function saveCompetitionEntry({
-  userId,
-  playerName,
-  completionTimeSeconds,
-  attempts
-}) {
-  try {
-    // 📅 Get week ending date (Sunday)
-    const now = new Date();
-    const day = now.getDay();
-    const diff = 7 - day;
-    const sunday = new Date(now);
-    sunday.setDate(now.getDate() + diff);
-
-    const weekEndingDate = sunday.toISOString().split("T")[0];
-
-    const docId = `${userId}_${weekEndingDate}`;
-    const ref = doc(db, "competitionEntries", docId);
-
-    const existing = await getDoc(ref);
-
-    const score = completionTimeSeconds + (attempts * 2);
-
-    if (!existing.exists()) {
-      await setDoc(ref, {
-        uid: userId,
-        playerName,
-        completionTimeSeconds,
-        attempts,
-        score,
-        weekEndingDate,
-        rewardStatus: "pending",
-        rewardRank: null,
-        rewardAmount: null,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        finalizedAt: null
-      });
-
-      console.log("🏆 Competition entry created");
-      return true;
-    }
-
-    // Compare scores
-    const old = existing.data();
-    const oldScore = old.score ?? (old.completionTimeSeconds + old.attempts * 2);
-
-    if (score < oldScore) {
-      await setDoc(ref, {
-        ...old,
-        playerName,
-        completionTimeSeconds,
-        attempts,
-        score,
-        updatedAt: serverTimestamp()
-      });
-
-      console.log("🔁 Competition score improved");
-    } else {
-      console.log("⛔ Not better for competition");
-    }
-
-    return true;
-  } catch (error) {
-    console.error("❌ Competition error:", error);
-    return false;
-  }
 }

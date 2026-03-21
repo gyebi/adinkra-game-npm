@@ -9,6 +9,10 @@
           "order": "ASCENDING"
         },
         {
+          "fieldPath": "score",
+          "order": "ASCENDING"
+        },
+        {
           "fieldPath": "completionTimeSeconds",
           "order": "ASCENDING"
         },
