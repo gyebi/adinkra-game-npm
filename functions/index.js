@@ -67,7 +67,7 @@ function buildWinnerEmailDraft(entryDoc, rank, weekEndingDate) {
   });
 
   return {
-    to: entry.email,
+    phoneNumber: entry.phoneNumber ?? null,
     subject: emailContent.subject,
     text: emailContent.text,
     html: emailContent.html,
@@ -162,7 +162,7 @@ export const finalizeWeeklyCompetition = onSchedule(
       winners: winners.map((winner, index) => ({
         entryId: winner.id,
         rank: index + 1,
-        email: winner.data().email
+        phoneNumber: winner.data().phoneNumber ?? null
       }))
     });
   }

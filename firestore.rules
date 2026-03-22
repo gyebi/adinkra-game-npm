@@ -19,12 +19,14 @@ service cloud.firestore {
       return isNonEmptyString(request.resource.data.playerName, 24)
         && request.resource.data.completionTimeSeconds is number
         && request.resource.data.attempts is number
+        && request.resource.data.score is number
         && isNonEmptyString(request.resource.data.date, 10)
         && request.resource.data.keys().hasOnly([
           'userId',
           'playerName',
           'completionTimeSeconds',
           'attempts',
+          'score',
           'date',
           'createdAt'
         ]);
@@ -38,6 +40,7 @@ service cloud.firestore {
 
     function hasValidCompetitionFields() {
       return isNonEmptyString(request.resource.data.playerName, 24)
+        && isNonEmptyString(request.resource.data.phoneNumber, 24)
         && request.resource.data.completionTimeSeconds is number
         && request.resource.data.attempts is number
         && request.resource.data.score is number
@@ -59,6 +62,7 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly([
           'uid',
           'playerName',
+          'phoneNumber',
           'completionTimeSeconds',
           'attempts',
           'score',

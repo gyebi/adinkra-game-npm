@@ -77,6 +77,43 @@ document.querySelector("#app").innerHTML = `
 
       <div id="leaderboard" class="results-leaderboard hidden"></div>
 
+      <div id="competition-entry-panel" class="competition-panel hidden">
+        <p class="competition-kicker">Weekly Competition</p>
+        <h2>Enter Competition</h2>
+        <p id="competition-entry-message" class="competition-message">
+          Enter your phone number to join the weekly competition.
+        </p>
+
+        <div class="competition-rewards" aria-label="Competition rewards">
+          <article class="competition-reward">
+            <span class="competition-reward-place">1st</span>
+            <strong>100 Cedis</strong>
+          </article>
+          <article class="competition-reward">
+            <span class="competition-reward-place">2nd</span>
+            <strong>50 Cedis</strong>
+          </article>
+          <article class="competition-reward">
+            <span class="competition-reward-place">3rd</span>
+            <strong>20 Cedis</strong>
+          </article>
+        </div>
+
+        <div class="competition-entry">
+          <input
+            id="competitionPhoneInput"
+            type="tel"
+            placeholder="Enter phone number"
+            autocomplete="tel"
+          />
+          <button id="competitionJoinBtn">Join Competition</button>
+          <button id="competitionSkipBtn" type="button">Not Now</button>
+        </div>
+      </div>
+
+      <div id="competitionLeaderboard" class="competition-board hidden"></div>
+      <div id="competition-player-rank" class="competition-player-rank hidden"></div>
+
       <div class="results-actions">
         <button id="play-again-btn" class="skip-intro-btn">Play Again</button>
         <button id="results-intro-btn">View Intro</button>

@@ -8,10 +8,15 @@ import sankofaImg from "./assets/assets/Sankofa.png";
 import tamfoBebreImg from "./assets/assets/Tamfo_Bebre.png";
 
 import { getCurrentUserId } from "./auth.js";
+import { renderCompetitionLeaderboard } from "./components/CompetitionLeaderboard.js";
 import { renderLeaderboard } from "./components/Leaderboard.js";
 import { saveScore } from "./services/leaderboardService.js";
 
-import { saveCompetitionEntry } from "./services/competitionService.js";
+import {
+  getCompetitionEntry,
+  getCompetitionWeekContext,
+  saveCompetitionEntry
+} from "./services/competitionService.js";
 
 const adinkraSymbols = [
   {
@@ -80,6 +85,13 @@ const resultsAttempts = document.getElementById("results-attempts");
 const resultsTime = document.getElementById("results-time");
 const resultsMessage = document.getElementById("results-message");
 const appBanner = document.getElementById("app-banner");
+const competitionEntryPanel = document.getElementById("competition-entry-panel");
+const competitionEntryMessage = document.getElementById("competition-entry-message");
+const competitionLeaderboardContainer = document.getElementById("competitionLeaderboard");
+const competitionPlayerRankContainer = document.getElementById("competition-player-rank");
+const competitionPhoneInput = document.getElementById("competitionPhoneInput");
+const competitionJoinBtn = document.getElementById("competitionJoinBtn");
+const competitionSkipBtn = document.getElementById("competitionSkipBtn");
 
 const matchedSymbols = new Set();
 const cards = [...adinkraSymbols, ...adinkraSymbols];
@@ -92,6 +104,7 @@ let gameStartTime = null;
 let timerIntervalId = null;
 let completionTimeSeconds = 0;
 const scoreDisplay = document.createElement("p");
+let pendingCompetitionEntry = null;
 
 function startGame() {
   introScreen.classList.add("fade-out");
@@ -235,8 +248,94 @@ function showResultsScreen() {
     "Enter your name to save this run and compare it against the top scores.";
   leaderboardContainer.classList.add("hidden");
   leaderboardContainer.innerHTML = "";
+  competitionEntryPanel.classList.add("hidden");
+  competitionLeaderboardContainer.classList.add("hidden");
+  competitionLeaderboardContainer.innerHTML = "";
+  competitionPlayerRankContainer.classList.add("hidden");
+  competitionPlayerRankContainer.innerHTML = "";
   playerInput.classList.remove("hidden");
   playerNameInput.focus();
+}
+
+function setCompetitionEntryMessage(message, isError = false) {
+  competitionEntryMessage.textContent = message;
+  competitionEntryMessage.classList.toggle("competition-message-error", isError);
+}
+
+function normalizeContactPhoneNumber(value) {
+  const compactValue = value.replace(/\s+/g, "");
+  return compactValue.length >= 7 ? compactValue : null;
+}
+
+function buildCompetitionEntryMessage() {
+  const { weekEndingDate } = getCompetitionWeekContext();
+  return `Enter your phone number to join the weekly competition for the week ending ${weekEndingDate}.\nPrizes: 1st - 100 Cedis, 2nd - 50 Cedis, 3rd - 20 Cedis.`;
+}
+
+function buildCompetitionAlreadyEnteredMessage(existingEntry) {
+  const { weekEndingDate } = getCompetitionWeekContext();
+  return `You are already entered in this week's competition ending ${weekEndingDate}. Current competition score: ${existingEntry.score} points.`;
+}
+
+async function showCompetitionLeaderboard(currentUserId) {
+  await renderCompetitionLeaderboard({ currentUserId });
+  competitionLeaderboardContainer.classList.remove("hidden");
+}
+
+async function handleCompetitionJoin() {
+  if (!pendingCompetitionEntry) {
+    setCompetitionEntryMessage(
+      "Save your score first before entering the competition.",
+      true
+    );
+    return;
+  }
+
+  const phoneNumber = normalizeContactPhoneNumber(
+    competitionPhoneInput.value.trim()
+  );
+
+  if (!phoneNumber) {
+    setCompetitionEntryMessage(
+      "Enter a valid phone number before joining the competition.",
+      true
+    );
+    return;
+  }
+
+  competitionJoinBtn.disabled = true;
+  competitionSkipBtn.disabled = true;
+
+  const result = await saveCompetitionEntry({
+    ...pendingCompetitionEntry,
+    phoneNumber
+  });
+
+  if (!result.ok) {
+    const message =
+      result.reason === "competition_closed"
+        ? "This week's competition is already closed. New entries now count toward next Saturday's competition."
+        : "We could not enter you into the competition right now.";
+    setCompetitionEntryMessage(message, true);
+    competitionJoinBtn.disabled = false;
+    competitionSkipBtn.disabled = false;
+    return;
+  }
+
+  competitionPhoneInput.value = "";
+  pendingCompetitionEntry = null;
+  competitionPhoneInput.disabled = true;
+  competitionJoinBtn.classList.add("hidden");
+  competitionSkipBtn.classList.add("hidden");
+  setCompetitionEntryMessage(
+    "You are already entered in this week's competition. The live top 3 is below."
+  );
+  await showCompetitionLeaderboard(getCurrentUserId());
+  resultsMessage.textContent =
+    "You are entered in this week's competition. The live top 3 is below.";
+  showBanner(
+    `You have joined the weekly competition for the week ending ${getCompetitionWeekContext().weekEndingDate}.`
+  );
 }
 
 submitScoreBtn.addEventListener("click", async () => {
@@ -272,45 +371,60 @@ submitScoreBtn.addEventListener("click", async () => {
   }
     */
 
-  // Ask player if they want to join competition
-const joinCompetition = confirm(
-  "🏆 Do you want to join the weekly competition?\n\nPrizes:\n1st place - 100 Cedis\n2nd place - 50 Cedis\n3rd place - 20 Cedis"
-);
-
-// Always save leaderboard score
-const wasSaved = await saveScore({
-  userId,
-  playerName,
-  completionTimeSeconds,
-  attempts
-});
-
-if (!wasSaved) {
-  resultsMessage.textContent =
-    "We could not save your score right now. Check Firebase auth and Firestore access.";
-  return;
-}
-
-// ⭐ NEW: Save competition entry ONLY if user agrees
-if (joinCompetition) {
-  await saveCompetitionEntry({
+  const wasSaved = await saveScore({
     userId,
     playerName,
     completionTimeSeconds,
     attempts
   });
 
-  console.log("🏆 Player joined competition");
-}
+  if (!wasSaved) {
+    resultsMessage.textContent =
+      "We are sorry we could not save your score right now. Try again after a while.";
+    return;
+  }
 
   scoreSubmitted = true;
+  pendingCompetitionEntry = {
+    userId,
+    playerName,
+    completionTimeSeconds,
+    attempts
+  };
 
   await renderLeaderboard();
+  const existingCompetitionEntry = await getCompetitionEntry(userId);
 
   playerInput.classList.add("hidden");
   leaderboardContainer.classList.remove("hidden");
-  resultsMessage.textContent =
-    "Your score was saved. Play again or view the intro.";
+
+  if (existingCompetitionEntry) {
+    competitionEntryPanel.classList.remove("hidden");
+    competitionPhoneInput.value = existingCompetitionEntry.phoneNumber ?? "";
+    competitionPhoneInput.disabled = true;
+    competitionJoinBtn.classList.add("hidden");
+    competitionSkipBtn.classList.add("hidden");
+    setCompetitionEntryMessage(
+      buildCompetitionAlreadyEnteredMessage(existingCompetitionEntry)
+    );
+    await showCompetitionLeaderboard(userId);
+    resultsMessage.textContent =
+      "You are already entered in this week's competition. The live top 3 is below.";
+  } else {
+    competitionEntryPanel.classList.remove("hidden");
+    competitionLeaderboardContainer.classList.add("hidden");
+    competitionLeaderboardContainer.innerHTML = "";
+    competitionPlayerRankContainer.classList.add("hidden");
+    competitionPlayerRankContainer.innerHTML = "";
+    competitionPhoneInput.disabled = false;
+    competitionJoinBtn.classList.remove("hidden");
+    competitionSkipBtn.classList.remove("hidden");
+    competitionJoinBtn.disabled = false;
+    competitionSkipBtn.disabled = false;
+    setCompetitionEntryMessage(buildCompetitionEntryMessage());
+    resultsMessage.textContent =
+      "Your score was saved. You can enter the weekly competition or play again.";
+  }
 
   console.log("✅ Score submitted from UI");
 });
@@ -342,6 +456,18 @@ function resetGameState() {
   playerNameInput.value = "";
   leaderboardContainer.classList.add("hidden");
   leaderboardContainer.innerHTML = "";
+  competitionEntryPanel.classList.add("hidden");
+  competitionLeaderboardContainer.classList.add("hidden");
+  competitionLeaderboardContainer.innerHTML = "";
+  competitionPlayerRankContainer.classList.add("hidden");
+  competitionPlayerRankContainer.innerHTML = "";
+  competitionPhoneInput.value = "";
+  competitionPhoneInput.disabled = false;
+  competitionJoinBtn.classList.remove("hidden");
+  competitionSkipBtn.classList.remove("hidden");
+  competitionJoinBtn.disabled = false;
+  competitionSkipBtn.disabled = false;
+  pendingCompetitionEntry = null;
   resultsAttempts.textContent = "0";
   resultsTime.textContent = "0s";
   resultsMessage.textContent =
@@ -388,6 +514,17 @@ function initializeGame() {
 
   resultsIntroBtn.addEventListener("click", () => {
     showIntroScreen();
+  });
+
+  competitionJoinBtn.addEventListener("click", () => {
+    handleCompetitionJoin();
+  });
+
+  competitionSkipBtn.addEventListener("click", () => {
+    competitionEntryPanel.classList.add("hidden");
+    pendingCompetitionEntry = null;
+    resultsMessage.textContent =
+      "Your score was saved. Play again or view the intro.";
   });
 
   const introSeen =

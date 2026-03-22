@@ -3,7 +3,8 @@ import {
   getCompetitionWeekStatus
 } from "../services/competitionService.js";
 
-const REWARD_LABELS = ["100 Cedis", "50 Cedis", "20 Cedis"];
+const REWARD_LABELS = ["🥇 100 Cedis", "🥈 50 Cedis", "🥉 20 Cedis"];
+const RANK_LABELS = ["🥇", "🥈", "🥉"];
 
 function formatCutoff(weekStatus) {
   return `Closes Saturday at 8:00 AM Ghana time (${weekStatus.weekEndingDate}).`;
@@ -14,7 +15,7 @@ function renderPlayerRank(container, playerStanding) {
     return;
   }
 
-  if (!playerStanding || playerStanding.rank <= 10) {
+  if (!playerStanding || playerStanding.rank <= 3) {
     container.classList.add("hidden");
     container.innerHTML = "";
     return;
@@ -41,6 +42,7 @@ export async function renderCompetitionLeaderboard({ currentUserId } = {}) {
     return;
   }
 
+  container.classList.remove("hidden");
   container.innerHTML = "<p>Loading weekly competition...</p>";
 
   try {
@@ -66,19 +68,21 @@ export async function renderCompetitionLeaderboard({ currentUserId } = {}) {
           <p class="competition-board-cutoff">${formatCutoff(weekStatus)}</p>
         </div>
         <p class="competition-board-empty">
-          No verified competition entries yet. Be the first verified player on this week's board.
+          No competition entries yet. Join now and aim for the top 3.
         </p>
       `;
       return;
     }
 
     const rows = standings.topEntries
+      .slice(0, 3)
       .map((entry, index) => {
         const rewardLabel = REWARD_LABELS[index] ?? "";
+        const rankLabel = RANK_LABELS[index] ?? `#${entry.rank}`;
 
         return `
           <li class="competition-board-row">
-            <span class="competition-board-rank">#${entry.rank}</span>
+            <span class="competition-board-rank">${rankLabel}</span>
             <div class="competition-board-player">
               <strong>${entry.playerName}</strong>
               <span>${entry.score} pts • ${entry.completionTimeSeconds}s • ${entry.attempts} attempts</span>
@@ -103,6 +107,12 @@ export async function renderCompetitionLeaderboard({ currentUserId } = {}) {
     `;
   } catch (error) {
     console.error("❌ Could not render competition leaderboard:", error);
+    console.log("competitionLeaderboardError", {
+      message: error?.message ?? null,
+      code: error?.code ?? null,
+      name: error?.name ?? null,
+      stack: error?.stack ?? null
+    });
     if (playerRankContainer) {
       playerRankContainer.classList.add("hidden");
       playerRankContainer.innerHTML = "";

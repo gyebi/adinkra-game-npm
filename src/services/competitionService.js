@@ -29,7 +29,18 @@ export function calculateCompetitionScore(completionTimeSeconds, attempts) {
 export function getCompetitionWeekContext(date = new Date()) {
   const weekDate = new Date(date);
   const dayOfWeek = weekDate.getUTCDay();
-  const daysUntilSaturday = (6 - dayOfWeek + 7) % 7;
+  let daysUntilSaturday = (6 - dayOfWeek + 7) % 7;
+
+  const currentSaturday = new Date(weekDate);
+  currentSaturday.setUTCDate(currentSaturday.getUTCDate() + daysUntilSaturday);
+  currentSaturday.setUTCHours(0, 0, 0, 0);
+
+  const currentSaturdayKey = formatUtcDateKey(currentSaturday);
+  const currentCutoffAt = new Date(`${currentSaturdayKey}T08:00:00.000Z`);
+
+  if (date.getTime() >= currentCutoffAt.getTime()) {
+    daysUntilSaturday += 7;
+  }
 
   weekDate.setUTCDate(weekDate.getUTCDate() + daysUntilSaturday);
   weekDate.setUTCHours(0, 0, 0, 0);
@@ -51,6 +62,31 @@ export function getCompetitionWeekEndingDate(date = new Date()) {
 
 export function getCompetitionEntryId(uid, weekEndingDate) {
   return `${uid}_${weekEndingDate}`;
+}
+
+export async function getCompetitionEntry(
+  userId,
+  weekEndingDate = getCompetitionWeekEndingDate()
+) {
+  if (!userId) {
+    return null;
+  }
+
+  const entryRef = doc(
+    db,
+    COMPETITION_COLLECTION,
+    getCompetitionEntryId(userId, weekEndingDate)
+  );
+  const snapshot = await getDoc(entryRef);
+
+  if (!snapshot.exists()) {
+    return null;
+  }
+
+  return {
+    id: snapshot.id,
+    ...snapshot.data()
+  };
 }
 
 export async function getCompetitionWeekStatus(date = new Date()) {
@@ -79,11 +115,12 @@ export async function getCompetitionWeekStatus(date = new Date()) {
 export async function saveCompetitionEntry({
   userId,
   playerName,
+  phoneNumber,
   completionTimeSeconds,
   attempts,
   weekEndingDate = getCompetitionWeekEndingDate()
 }) {
-  if (!userId) {
+  if (!userId || !phoneNumber) {
     return {
       ok: false,
       reason: "missing_identity"
@@ -108,6 +145,7 @@ export async function saveCompetitionEntry({
     await setDoc(entryRef, {
       uid: userId,
       playerName,
+      phoneNumber,
       completionTimeSeconds,
       attempts,
       score,
@@ -155,6 +193,7 @@ export async function saveCompetitionEntry({
     {
       uid: userId,
       playerName,
+      phoneNumber,
       completionTimeSeconds,
       attempts,
       score,
