@@ -7,14 +7,16 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "competition:email-preview": "node scripts/previewWinnerEmail.mjs",
+    "competition:sms-preview": "node scripts/previewWinnerSms.mjs",
     "competition:report-preview": "node scripts/previewWinnerReport.mjs",
-    "competition:finalize": "node scripts/finalizeWeeklyCompetition.mjs"
+    "competition:finalize": "node scripts/finalizeWeeklyCompetition.mjs",
+    "competition:sms-test": "node scripts/testAfricaTalkingSms.mjs"
   },
   "devDependencies": {
     "vite": "^8.0.0"
   },
   "dependencies": {
+    "africastalking": "^0.7.9",
     "firebase": "^12.10.0",
     "firebase-admin": "^13.6.0"
   }

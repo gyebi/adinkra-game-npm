@@ -58,16 +58,16 @@ async function main() {
   const snapshot = await db
     .collection("competitionEntries")
     .where("weekEndingDate", "==", weekEndingDate)
+    .orderBy("score", "asc")
     .orderBy("completionTimeSeconds", "asc")
     .orderBy("attempts", "asc")
     .get();
 
   const winners = snapshot.docs.slice(0, 3);
-  const winnerDocIds = new Set(winners.map((doc) => doc.id));
   const batch = db.batch();
 
   snapshot.docs.forEach((entryDoc, index) => {
-    const isWinner = winnerDocIds.has(entryDoc.id);
+    const isWinner = index < 3;
     const rewardRank = isWinner ? index + 1 : null;
     const rewardAmount = rewardRank === 1 ? 100 : rewardRank === 2 ? 50 : rewardRank === 3 ? 20 : null;
 
@@ -77,11 +77,27 @@ async function main() {
         rewardStatus: isWinner ? "won" : "not_winner",
         rewardRank,
         rewardAmount,
-        finalizedAt: FieldValue.serverTimestamp()
+        finalizedAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp()
       },
       { merge: true }
     );
   });
+
+  const weekRef = db.collection("competitionWeeks").doc(weekEndingDate);
+
+  batch.set(
+    weekRef,
+    {
+      weekEndingDate,
+      timezone: "Africa/Accra",
+      cutoffAt: `${weekEndingDate}T08:00:00.000Z`,
+      status: "closed",
+      finalizedAt: FieldValue.serverTimestamp(),
+      winnerEntryIds: winners.map((winner) => winner.id)
+    },
+    { merge: true }
+  );
 
   await batch.commit();
 
@@ -92,7 +108,8 @@ async function main() {
       rank: index + 1,
       rewardAmount,
       playerName: data.playerName,
-      email: data.email,
+      phoneNumber: data.phoneNumber ?? null,
+      score: data.score ?? null,
       completionTimeSeconds: data.completionTimeSeconds,
       attempts: data.attempts,
       documentId: winnerDoc.id
