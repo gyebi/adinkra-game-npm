@@ -266,7 +266,7 @@ function setCompetitionEntryMessage(message, isError = false) {
 
 function normalizeContactPhoneNumber(value) {
   const compactValue = value.replace(/\s+/g, "");
-  return compactValue.length >= 7 ? compactValue : null;
+  return /^\+233\d{9}$/.test(compactValue) ? compactValue : null;
 }
 
 function buildCompetitionEntryMessage() {
@@ -276,7 +276,7 @@ function buildCompetitionEntryMessage() {
 
 function buildCompetitionAlreadyEnteredMessage(existingEntry) {
   const { weekEndingDate } = getCompetitionWeekContext();
-  return `You are already entered in this week's competition ending ${weekEndingDate}. Current competition score: ${existingEntry.score} points.`;
+  return `You are already entered in this week's competition ending ${weekEndingDate}. Your current competition total is ${existingEntry.score}. Lower totals rank higher.`;
 }
 
 function setCompetitionActionState({
@@ -317,7 +317,7 @@ async function handleCompetitionJoin() {
 
   if (!phoneNumber) {
     setCompetitionEntryMessage(
-      "Enter a valid phone number before joining the competition.",
+      "Enter a valid phone number in the format +233XXXXXXXXX.",
       true
     );
     return;
