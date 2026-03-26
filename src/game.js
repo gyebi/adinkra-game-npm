@@ -92,6 +92,8 @@ const competitionPlayerRankContainer = document.getElementById("competition-play
 const competitionPhoneInput = document.getElementById("competitionPhoneInput");
 const competitionJoinBtn = document.getElementById("competitionJoinBtn");
 const competitionSkipBtn = document.getElementById("competitionSkipBtn");
+const DEFAULT_COMPETITION_JOIN_LABEL = "Join Competition";
+const UPDATE_COMPETITION_JOIN_LABEL = "Update Competition Score";
 
 const matchedSymbols = new Set();
 const cards = [...adinkraSymbols, ...adinkraSymbols];
@@ -277,6 +279,24 @@ function buildCompetitionAlreadyEnteredMessage(existingEntry) {
   return `You are already entered in this week's competition ending ${weekEndingDate}. Current competition score: ${existingEntry.score} points.`;
 }
 
+function setCompetitionActionState({
+  phoneNumber = "",
+  phoneDisabled = false,
+  joinHidden = false,
+  skipHidden = false,
+  joinDisabled = false,
+  skipDisabled = false,
+  joinLabel = DEFAULT_COMPETITION_JOIN_LABEL
+} = {}) {
+  competitionPhoneInput.value = phoneNumber;
+  competitionPhoneInput.disabled = phoneDisabled;
+  competitionJoinBtn.textContent = joinLabel;
+  competitionJoinBtn.classList.toggle("hidden", joinHidden);
+  competitionSkipBtn.classList.toggle("hidden", skipHidden);
+  competitionJoinBtn.disabled = joinDisabled;
+  competitionSkipBtn.disabled = skipDisabled;
+}
+
 async function showCompetitionLeaderboard(currentUserId) {
   await renderCompetitionLeaderboard({ currentUserId });
   competitionLeaderboardContainer.classList.remove("hidden");
@@ -306,35 +326,58 @@ async function handleCompetitionJoin() {
   competitionJoinBtn.disabled = true;
   competitionSkipBtn.disabled = true;
 
-  const result = await saveCompetitionEntry({
-    ...pendingCompetitionEntry,
-    phoneNumber
-  });
+  let result;
+
+  try {
+    result = await saveCompetitionEntry({
+      ...pendingCompetitionEntry,
+      phoneNumber
+    });
+  } catch (error) {
+    console.error("Competition entry failed:", error);
+    setCompetitionEntryMessage(
+      "Score could not be saved. Please try again later.",
+      true
+    );
+    competitionJoinBtn.disabled = false;
+    competitionSkipBtn.disabled = false;
+    return;
+  }
 
   if (!result.ok) {
     const message =
       result.reason === "competition_closed"
-        ? "This week's competition is already closed. New entries now count toward next Saturday's competition."
-        : "We could not enter you into the competition right now.";
+        ? "This week's competition is closed, so your entry was not submitted. Please try again when the next competition opens."
+        : "Score could not be saved. Please try again later.";
     setCompetitionEntryMessage(message, true);
     competitionJoinBtn.disabled = false;
     competitionSkipBtn.disabled = false;
     return;
   }
 
-  competitionPhoneInput.value = "";
   pendingCompetitionEntry = null;
-  competitionPhoneInput.disabled = true;
-  competitionJoinBtn.classList.add("hidden");
-  competitionSkipBtn.classList.add("hidden");
+  setCompetitionActionState({
+    phoneNumber,
+    phoneDisabled: true,
+    joinHidden: true,
+    skipHidden: true
+  });
   setCompetitionEntryMessage(
-    "You are already entered in this week's competition. The live top 3 is below."
+    result.status === "improved"
+      ? "Your competition entry has been updated. The live top 3 is below."
+      : result.status === "unchanged"
+        ? "Your current competition entry is still better. The live top 3 is below."
+        : "You are already entered in this week's competition. The live top 3 is below."
   );
   await showCompetitionLeaderboard(getCurrentUserId());
   resultsMessage.textContent =
-    "You are entered in this week's competition. The live top 3 is below.";
+    result.status === "improved"
+      ? "Your competition score has been updated. The live top 3 is below."
+      : "You are entered in this week's competition. The live top 3 is below.";
   showBanner(
-    `You have joined the weekly competition for the week ending ${getCompetitionWeekContext().weekEndingDate}.`
+    result.status === "improved"
+      ? `Your weekly competition entry for ${getCompetitionWeekContext().weekEndingDate} has been updated.`
+      : `You have joined the weekly competition for the week ending ${getCompetitionWeekContext().weekEndingDate}.`
   );
 }
 
@@ -400,10 +443,15 @@ submitScoreBtn.addEventListener("click", async () => {
 
   if (existingCompetitionEntry) {
     competitionEntryPanel.classList.remove("hidden");
-    competitionPhoneInput.value = existingCompetitionEntry.phoneNumber ?? "";
-    competitionPhoneInput.disabled = true;
-    competitionJoinBtn.classList.add("hidden");
-    competitionSkipBtn.classList.add("hidden");
+    setCompetitionActionState({
+      phoneNumber: existingCompetitionEntry.phoneNumber ?? "",
+      phoneDisabled: true,
+      joinHidden: false,
+      skipHidden: false,
+      joinDisabled: false,
+      skipDisabled: false,
+      joinLabel: UPDATE_COMPETITION_JOIN_LABEL
+    });
     setCompetitionEntryMessage(
       buildCompetitionAlreadyEnteredMessage(existingCompetitionEntry)
     );
@@ -416,11 +464,7 @@ submitScoreBtn.addEventListener("click", async () => {
     competitionLeaderboardContainer.innerHTML = "";
     competitionPlayerRankContainer.classList.add("hidden");
     competitionPlayerRankContainer.innerHTML = "";
-    competitionPhoneInput.disabled = false;
-    competitionJoinBtn.classList.remove("hidden");
-    competitionSkipBtn.classList.remove("hidden");
-    competitionJoinBtn.disabled = false;
-    competitionSkipBtn.disabled = false;
+    setCompetitionActionState();
     setCompetitionEntryMessage(buildCompetitionEntryMessage());
     resultsMessage.textContent =
       "Your score was saved. You can enter the weekly competition or play again.";
@@ -461,12 +505,7 @@ function resetGameState() {
   competitionLeaderboardContainer.innerHTML = "";
   competitionPlayerRankContainer.classList.add("hidden");
   competitionPlayerRankContainer.innerHTML = "";
-  competitionPhoneInput.value = "";
-  competitionPhoneInput.disabled = false;
-  competitionJoinBtn.classList.remove("hidden");
-  competitionSkipBtn.classList.remove("hidden");
-  competitionJoinBtn.disabled = false;
-  competitionSkipBtn.disabled = false;
+  setCompetitionActionState();
   pendingCompetitionEntry = null;
   resultsAttempts.textContent = "0";
   resultsTime.textContent = "0s";

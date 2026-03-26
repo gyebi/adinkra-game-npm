@@ -10,6 +10,9 @@
 }
 
 body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
   font-family: "Trebuchet MS", "Gill Sans", sans-serif;
   text-align: center;
   background:
@@ -19,6 +22,10 @@ body {
   margin: 0;
   padding: 12px 10px 24px;
   color: var(--ink);
+}
+
+#app {
+  flex: 1;
 }
 
 #intro-screen,
@@ -225,8 +232,9 @@ body {
 
 
 footer {
+    margin-top: auto;
+    padding-top: 16px;
     font-size: 0.6rem;
-
 }
 
 /* Intro fade animation */
@@ -401,6 +409,10 @@ footer {
   color: var(--ink);
   text-align: left;
   box-shadow: inset 0 0 0 1px rgba(199, 141, 44, 0.18);
+}
+
+.intro-competition-panel {
+  text-align: left;
 }
 
 .competition-panel-header {

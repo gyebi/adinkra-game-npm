@@ -36,6 +36,35 @@ document.querySelector("#app").innerHTML = `
       </ol>
     </div>
 
+    <div class="competition-panel intro-competition-panel">
+      <p class="competition-kicker">Weekly Competition</p>
+      <h2>Play For Rewards</h2>
+      <p class="competition-message">
+        Finish a round and save your score to unlock the weekly competition entry.
+        The fastest and most efficient players rise to the top of the live leaderboard.
+      </p>
+
+      <div class="competition-rewards" aria-label="Competition rewards">
+        <article class="competition-reward">
+          <span class="competition-reward-place">1st</span>
+          <strong>100 Cedis</strong>
+        </article>
+        <article class="competition-reward">
+          <span class="competition-reward-place">2nd</span>
+          <strong>50 Cedis</strong>
+        </article>
+        <article class="competition-reward">
+          <span class="competition-reward-place">3rd</span>
+          <strong>20 Cedis</strong>
+        </article>
+      </div>
+
+      <p class="competition-footnote">
+        After you submit your score, enter your phone number to join the current
+        week&apos;s competition and track the live top 3.
+      </p>
+    </div>
+
     <button class="skip-intro-btn">Start Game</button>
   </div>
 
