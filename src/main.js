@@ -132,7 +132,7 @@ document.querySelector("#app").innerHTML = `
           <input
             id="competitionPhoneInput"
             type="tel"
-            placeholder="Enter phone number"
+            placeholder="0559101078 or +233559101078"
             autocomplete="tel"
           />
           <button id="competitionJoinBtn">Join Competition</button>

@@ -265,8 +265,25 @@ function setCompetitionEntryMessage(message, isError = false) {
 }
 
 function normalizeContactPhoneNumber(value) {
-  const compactValue = value.replace(/\s+/g, "");
-  return /^\+233\d{9}$/.test(compactValue) ? compactValue : null;
+  const compactValue = value.replace(/[\s()-]/g, "");
+
+  if (/^\+233\d{9}$/.test(compactValue)) {
+    return compactValue;
+  }
+
+  if (/^233\d{9}$/.test(compactValue)) {
+    return `+${compactValue}`;
+  }
+
+  if (/^0\d{9}$/.test(compactValue)) {
+    return `+233${compactValue.slice(1)}`;
+  }
+
+  if (/^\d{9}$/.test(compactValue)) {
+    return `+233${compactValue}`;
+  }
+
+  return null;
 }
 
 function buildCompetitionEntryMessage() {
@@ -317,7 +334,7 @@ async function handleCompetitionJoin() {
 
   if (!phoneNumber) {
     setCompetitionEntryMessage(
-      "Enter a valid phone number in the format +233XXXXXXXXX.",
+      "Enter a valid Ghana phone number such as 0559101078 or +233559101078.",
       true
     );
     return;
@@ -363,7 +380,9 @@ async function handleCompetitionJoin() {
     skipHidden: true
   });
   setCompetitionEntryMessage(
-    result.status === "improved"
+    result.status === "created"
+      ? "You have joined this week's competition. The live top 3 is below."
+      : result.status === "improved"
       ? "Your competition entry has been updated. The live top 3 is below."
       : result.status === "unchanged"
         ? "Your current competition entry is still better. The live top 3 is below."
@@ -371,7 +390,9 @@ async function handleCompetitionJoin() {
   );
   await showCompetitionLeaderboard(getCurrentUserId());
   resultsMessage.textContent =
-    result.status === "improved"
+    result.status === "created"
+      ? "You are entered in this week's competition. The live top 3 is below."
+      : result.status === "improved"
       ? "Your competition score has been updated. The live top 3 is below."
       : "You are entered in this week's competition. The live top 3 is below.";
   showBanner(
