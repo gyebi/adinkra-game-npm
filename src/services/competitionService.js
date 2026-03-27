@@ -159,6 +159,15 @@ export async function saveCompetitionEntry({
     });
 
     console.log("🏆 Competition entry created");
+    console.log("record saved", {
+      collection: COMPETITION_COLLECTION,
+      entryId,
+      status: "created",
+      weekEndingDate,
+      playerName,
+      phoneNumber,
+      score
+    });
     return {
       ok: true,
       status: "created",
@@ -204,6 +213,15 @@ export async function saveCompetitionEntry({
   );
 
   console.log("🔁 Competition score improved");
+  console.log("record saved", {
+    collection: COMPETITION_COLLECTION,
+    entryId,
+    status: "improved",
+    weekEndingDate,
+    playerName,
+    phoneNumber,
+    score
+  });
   return {
     ok: true,
     status: "improved",

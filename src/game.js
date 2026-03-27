@@ -334,7 +334,7 @@ async function handleCompetitionJoin() {
 
   if (!phoneNumber) {
     setCompetitionEntryMessage(
-      "Enter a valid Ghana phone number such as 0559101078 or +233559101078.",
+      "Enter a valid Ghana phone number such as 055XXXXXXX or +2335555XXXXXXX.",
       true
     );
     return;
@@ -349,6 +349,10 @@ async function handleCompetitionJoin() {
     result = await saveCompetitionEntry({
       ...pendingCompetitionEntry,
       phoneNumber
+    });
+    console.log("record saved", {
+      flow: "competition_join",
+      result
     });
   } catch (error) {
     console.error("Competition entry failed:", error);
@@ -420,20 +424,7 @@ submitScoreBtn.addEventListener("click", async () => {
   }
 
   console.log("🧠 Submitting player:", playerName);
-/*
-  const wasSaved = await saveScore({
-    userId,
-    playerName,
-    completionTimeSeconds,
-    attempts
-  });
 
-  if (!wasSaved) {
-    resultsMessage.textContent =
-      "We could not save your score right now. Check Firebase auth and Firestore access.";
-    return;
-  }
-    */
 
   const wasSaved = await saveScore({
     userId,
