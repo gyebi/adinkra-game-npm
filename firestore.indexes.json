@@ -1,7 +1,7 @@
 {
   "indexes": [
     {
-      "collectionGroup": "competitionEntries",
+      "collectionGroup": "leaderboard",
       "queryScope": "COLLECTION",
       "fields": [
         {

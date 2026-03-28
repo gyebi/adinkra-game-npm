@@ -1,4 +1,5 @@
 import { db } from "../firebase.js";
+import { getLeaderboardWeekContext } from "../../shared/leaderboardWeek.js";
 import {
   doc,
   setDoc,
@@ -17,15 +18,22 @@ export async function saveScore({
   playerName,
   completionTimeSeconds,
   attempts,
+  phoneNumber,
 }) {
   if (!userId) {
     console.error("❌ Error saving score: missing userId");
-    return false;
+    return { ok: false, reason: "missing_user" };
+  }
+
+  if (!phoneNumber) {
+    console.error("❌ Error saving score: missing phoneNumber");
+    return { ok: false, reason: "missing_phone" };
   }
 
   try {
     // 📅 Get today's date
     const today = new Date().toISOString().split("T")[0];
+    const { weekEndingDate } = getLeaderboardWeekContext(new Date());
 
     // 🆔 Unique doc ID (one per user per day)
     const docId = `${userId}_${today}`;
@@ -42,15 +50,22 @@ export async function saveScore({
       await setDoc(scoreRef, {
         userId,
         playerName,
+        phoneNumber,
         completionTimeSeconds,
         attempts,
         score, // ⭐ NEW FIELD
         date: today,
+        weekEndingDate,
         createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       });
 
       console.log("✅ New score saved");
-      return true;
+      return {
+        ok: true,
+        status: "created",
+        entryId: docId
+      };
     }
 
     // ✅ CASE 2: Compare scores
@@ -64,25 +79,39 @@ export async function saveScore({
     const isBetter = newScore < oldScore;
 
     if (isBetter) {
-      await setDoc(scoreRef, {
-        userId,
-        playerName,
-        completionTimeSeconds,
-        attempts,
-        score,
-        date: today,
-        createdAt: serverTimestamp(),
-      });
+      await setDoc(
+        scoreRef,
+        {
+          userId,
+          playerName,
+          phoneNumber,
+          completionTimeSeconds,
+          attempts,
+          score,
+          date: today,
+          weekEndingDate,
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
 
       console.log("🔁 Score improved and updated");
-      return true;
+      return {
+        ok: true,
+        status: "improved",
+        entryId: docId
+      };
     } else {
       console.log("⛔ Score not better — ignored");
-      return true;
+      return {
+        ok: true,
+        status: "unchanged",
+        entryId: docId
+      };
     }
   } catch (error) {
     console.error("❌ Error saving score:", error);
-    return false;
+    return { ok: false, reason: "save_failed" };
   }
 }
 

@@ -30,8 +30,7 @@ body {
 
 #intro-screen,
 #game-screen,
-#results-screen,
-#competition-screen {
+#results-screen {
   width: min(100%, 460px);
   margin: 0 auto;
 }
@@ -153,31 +152,12 @@ body {
   transition: all 0.25s ease;
 }
 
-#competition-results-btn {
-  margin: 0 auto 20px;
-  padding: 10px 24px;
-  font-size: 0.95rem;
-  border-radius: 30px;
-  border: 1px solid #155e63;
-  background: rgba(255, 255, 255, 0.86);
-  color: #155e63;
-  cursor: pointer;
-  display: block;
-  width: min(100%, 240px);
-  transition: all 0.25s ease;
-}
-
 #show-intro-btn:hover {
   background: #7a4a1f;
   color: #fff;
 }
 
 #results-intro-btn:hover {
-  background: #155e63;
-  color: #fff;
-}
-
-#competition-results-btn:hover {
   background: #155e63;
   color: #fff;
 }
@@ -189,11 +169,6 @@ body {
 #results-intro-btn:active {
   transform: scale(0.97);
 }
-
-#competition-results-btn:active {
-  transform: scale(0.97);
-}
-
 
 .info-panel {
   width: min(100%, var(--board-size));
@@ -399,269 +374,6 @@ footer {
   margin-top: 18px;
 }
 
-.competition-panel {
-  margin-top: 18px;
-  padding: 20px 18px;
-  border-radius: 22px;
-  background:
-    linear-gradient(140deg, rgba(255, 247, 230, 0.98), rgba(248, 236, 205, 0.95)),
-    linear-gradient(140deg, #f3ddae, #f8efdc);
-  color: #FFFFFF;
-  text-align: left;
-  box-shadow: inset 0 0 0 1px rgba(199, 141, 44, 0.18);
-}
-
-.intro-competition-panel {
-  text-align: left;
-}
-
-.competition-panel-header {
-  display: flex;
-  gap: 14px;
-  align-items: center;
-}
-
-.competition-shell h1 {
-  margin: 0 0 6px;
-}
-
-.competition-symbol-stack {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  width: 100px;
-}
-
-.competition-symbol-stack img {
-  width: 28px;
-  height: 28px;
-  padding: 6px;
-  border-radius: 12px;
-  background: rgba(20, 92, 99, 0.08);
-  object-fit: contain;
-}
-
-.competition-kicker {
-  margin: 0 0 4px;
-  font-size: 0.76rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #FFFFFF;
-}
-
-.competition-panel h2 {
-  margin: 0;
-  font-size: 1.2rem;
-}
-
-.competition-message {
-  margin: 16px 0 0;
-  line-height: 1.5;
-}
-
-.competition-message-error {
-  color: #FFFFFF;
-}
-
-.competition-rewards {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  margin: 18px 0;
-}
-
-.competition-reward {
-  padding: 14px 10px;
-  border-radius: 18px;
-  background:
-    radial-gradient(circle at top, rgba(255, 208, 96, 0.5), transparent 55%),
-    rgba(20, 92, 99, 0.06);
-  border: 1px solid rgba(20, 92, 99, 0.1);
-  text-align: center;
-}
-
-.competition-reward-place {
-  display: block;
-  margin-bottom: 8px;
-  font-size: 0.76rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #FFFFFF;
-}
-
-.competition-entry,
-.competition-linked {
-  display: grid;
-  gap: 12px;
-}
-
-.competition-linked p {
-  margin: 0;
-  padding: 12px 14px;
-  border-radius: 14px;
-  background: rgba(20, 92, 99, 0.08);
-  font-weight: 600;
-}
-
-.competition-entry input,
-.competition-linked button {
-  width: 100%;
-}
-
-.competition-entry input {
-  padding: 14px 16px;
-  border: none;
-  border-radius: 14px;
-  font-size: 1rem;
-  background: rgba(255, 255, 255, 0.94);
-  color: var(--ink);
-}
-
-.competition-entry input:focus {
-  outline: 3px solid rgba(199, 141, 44, 0.35);
-  outline-offset: 2px;
-}
-
-.competition-entry button,
-.competition-linked button {
-  padding: 14px 16px;
-  border: none;
-  border-radius: 14px;
-  font-size: 1rem;
-  font-weight: 700;
-  cursor: pointer;
-  background: linear-gradient(135deg, #1f766e, #145c63);
-  color: #FFFFFF;
-}
-
-.competition-entry button:disabled,
-.competition-linked button:disabled {
-  cursor: wait;
-  opacity: 0.7;
-}
-
-.competition-footnote {
-  margin: 14px 0 0;
-  font-size: 0.82rem;
-  line-height: 1.45;
-  color: #FFFFFF;
-}
-
-.competition-board {
-  margin-top: 18px;
-  padding: 16px;
-  border-radius: 18px;
-  background: rgba(20, 92, 99, 0.08);
-}
-
-.competition-board-header {
-  display: grid;
-  gap: 8px;
-  margin-bottom: 14px;
-}
-
-.competition-board-kicker {
-  margin: 0;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #FFFFFF;
-}
-
-.competition-board-header h3 {
-  margin: 0;
-  font-size: 1rem;
-}
-
-.competition-board-cutoff {
-  margin: 0;
-  font-size: 0.82rem;
-  line-height: 1.4;
-  color: #FFFFFF;
-}
-
-.competition-board-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 10px;
-}
-
-.competition-board-row {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 10px;
-  align-items: center;
-  padding: 12px 10px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.8);
-}
-
-.competition-board-rank {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 42px;
-  height: 42px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #f0b847, #c78d2c);
-  color: #FFFFFF;
-  font-weight: 800;
-}
-
-.competition-board-player {
-  display: grid;
-  gap: 2px;
-}
-
-.competition-board-player strong {
-  font-size: 0.96rem;
-}
-
-.competition-board-player span {
-  font-size: 0.82rem;
-  color: #FFFFFF;
-}
-
-.competition-board-reward {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #FFFFFF;
-}
-
-.competition-board-empty {
-  margin: 0;
-  font-size: 0.92rem;
-  line-height: 1.5;
-}
-
-.competition-player-rank {
-  margin-top: 14px;
-  padding: 14px 16px;
-  border-radius: 18px;
-  background: rgba(199, 141, 44, 0.14);
-}
-
-.competition-player-rank-label {
-  margin: 0 0 10px;
-  font-size: 0.74rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #FFFFFF;
-}
-
-.competition-player-rank-row {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 10px;
-  align-items: center;
-}
-
 .game-instructions {
   max-width: 500px;
   margin: 20px auto;
@@ -690,9 +402,5 @@ footer {
 
   .results-shell {
     padding: 34px 30px 28px;
-  }
-
-  .competition-panel {
-    padding: 24px 22px;
   }
 }

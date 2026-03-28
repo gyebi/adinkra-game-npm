@@ -17,72 +17,24 @@ service cloud.firestore {
 
     function hasValidLeaderboardFields() {
       return isNonEmptyString(request.resource.data.playerName, 24)
-        && request.resource.data.completionTimeSeconds is number
-        && request.resource.data.attempts is number
-        && request.resource.data.score is number
-        && isNonEmptyString(request.resource.data.date, 10)
-        && request.resource.data.keys().hasOnly([
-          'userId',
-          'playerName',
-          'completionTimeSeconds',
-          'attempts',
-          'score',
-          'date',
-          'createdAt'
-        ]);
-    }
-
-    function isCompetitionDocumentOwner() {
-      return isSignedIn()
-        && request.resource.data.uid == request.auth.uid
-        && request.resource.id == request.auth.uid + "_" + request.resource.data.weekEndingDate;
-    }
-
-    function hasValidCompetitionFields() {
-      return isNonEmptyString(request.resource.data.playerName, 24)
         && isNonEmptyString(request.resource.data.phoneNumber, 24)
         && request.resource.data.completionTimeSeconds is number
         && request.resource.data.attempts is number
         && request.resource.data.score is number
+        && isNonEmptyString(request.resource.data.date, 10)
         && isNonEmptyString(request.resource.data.weekEndingDate, 10)
-        && request.resource.data.rewardStatus is string
-        && (
-          request.resource.data.rewardRank == null ||
-          request.resource.data.rewardRank is number
-        )
-        && (
-          !("rewardAmount" in request.resource.data) ||
-          request.resource.data.rewardAmount == null ||
-          request.resource.data.rewardAmount is number
-        )
-        && (
-          !("finalizedAt" in request.resource.data) ||
-          request.resource.data.finalizedAt == null
-        )
         && request.resource.data.keys().hasOnly([
-          'uid',
+          'userId',
           'playerName',
           'phoneNumber',
           'completionTimeSeconds',
           'attempts',
           'score',
+          'date',
           'weekEndingDate',
-          'rewardStatus',
-          'rewardRank',
-          'rewardAmount',
           'createdAt',
-          'updatedAt',
-          'finalizedAt'
+          'updatedAt'
         ]);
-    }
-
-    function preservesRewardDecision() {
-      return request.resource.data.rewardStatus == resource.data.rewardStatus
-        && request.resource.data.rewardRank == resource.data.rewardRank
-        && request.resource.data.rewardAmount == resource.data.rewardAmount
-        && request.resource.data.finalizedAt == resource.data.finalizedAt
-        && request.resource.data.weekEndingDate == resource.data.weekEndingDate
-        && request.resource.data.uid == resource.data.uid;
     }
 
     match /leaderboard/{documentId} {
@@ -93,25 +45,6 @@ service cloud.firestore {
         && request.resource.data.date == resource.data.date
         && request.resource.data.userId == resource.data.userId;
       allow delete: if false;
-    }
-
-    match /competitionEntries/{entryId} {
-      allow read: if true;
-      allow create: if isCompetitionDocumentOwner()
-        && hasValidCompetitionFields()
-        && request.resource.data.rewardStatus == 'pending'
-        && request.resource.data.rewardRank == null
-        && request.resource.data.rewardAmount == null
-        && request.resource.data.finalizedAt == null;
-      allow update: if isCompetitionDocumentOwner()
-        && hasValidCompetitionFields()
-        && preservesRewardDecision();
-      allow delete: if false;
-    }
-
-    match /competitionWeeks/{weekEndingDate} {
-      allow read: if true;
-      allow write: if false;
     }
   }
 }

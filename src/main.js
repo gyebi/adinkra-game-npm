@@ -36,35 +36,6 @@ document.querySelector("#app").innerHTML = `
       </ol>
     </div>
 
-    <div class="competition-panel intro-competition-panel">
-      <p class="competition-kicker">Weekly Competition</p>
-      <h2>Play For Rewards</h2>
-      <p class="competition-message">
-        Finish a round and save your score to unlock the weekly competition entry.
-        The fastest and most efficient players rise to the top of the live leaderboard.
-      </p>
-
-      <div class="competition-rewards" aria-label="Competition rewards">
-        <article class="competition-reward">
-          <span class="competition-reward-place">1st</span>
-          <strong>100 Cedis</strong>
-        </article>
-        <article class="competition-reward">
-          <span class="competition-reward-place">2nd</span>
-          <strong>50 Cedis</strong>
-        </article>
-        <article class="competition-reward">
-          <span class="competition-reward-place">3rd</span>
-          <strong>20 Cedis</strong>
-        </article>
-      </div>
-
-      <p class="competition-footnote">
-        After you submit your score, enter your phone number to join the current
-        week&apos;s competition and track the live top 3.
-      </p>
-    </div>
-
     <button class="skip-intro-btn">Start Game</button>
   </div>
 
@@ -85,7 +56,7 @@ document.querySelector("#app").innerHTML = `
       <p class="results-kicker">Leaderboard Run</p>
       <h1>Game Complete</h1>
       <p id="results-message">
-        Enter your name to see how your performance compares on the leaderboard.
+        Enter your name and phone number to save this run and compare it against the leaderboard.
       </p>
 
       <div class="results-stats">
@@ -101,47 +72,17 @@ document.querySelector("#app").innerHTML = `
 
       <div id="playerInput" class="results-entry">
         <input id="playerNameInput" placeholder="Enter your name" maxlength="24" />
+        <input
+          id="playerPhoneInput"
+          type="tel"
+          placeholder="+233559101078"
+          maxlength="16"
+          autocomplete="tel"
+        />
         <button id="submitScore">Submit Score</button>
       </div>
 
       <div id="leaderboard" class="results-leaderboard hidden"></div>
-
-      <div id="competition-entry-panel" class="competition-panel hidden">
-        <p class="competition-kicker">Weekly Competition</p>
-        <h2>Enter Competition</h2>
-        <p id="competition-entry-message" class="competition-message">
-          Enter your phone number to join the weekly competition.
-        </p>
-
-        <div class="competition-rewards" aria-label="Competition rewards">
-          <article class="competition-reward">
-            <span class="competition-reward-place">1st</span>
-            <strong>100 Cedis</strong>
-          </article>
-          <article class="competition-reward">
-            <span class="competition-reward-place">2nd</span>
-            <strong>50 Cedis</strong>
-          </article>
-          <article class="competition-reward">
-            <span class="competition-reward-place">3rd</span>
-            <strong>20 Cedis</strong>
-          </article>
-        </div>
-
-        <div class="competition-entry">
-          <input
-            id="competitionPhoneInput"
-            type="tel"
-            placeholder="0559101078 or +233559101078"
-            autocomplete="tel"
-          />
-          <button id="competitionJoinBtn">Join Competition</button>
-          <button id="competitionSkipBtn" type="button">Not Now</button>
-        </div>
-      </div>
-
-      <div id="competitionLeaderboard" class="competition-board hidden"></div>
-      <div id="competition-player-rank" class="competition-player-rank hidden"></div>
 
       <div class="results-actions">
         <button id="play-again-btn" class="skip-intro-btn">Play Again</button>

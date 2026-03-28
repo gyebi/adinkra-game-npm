@@ -119,22 +119,19 @@ function formatEntry(entryDoc) {
 
   return {
     id: entryDoc.id,
-    uid: data.uid ?? null,
+    userId: data.userId ?? null,
     playerName: data.playerName ?? null,
     phoneNumber: data.phoneNumber ?? null,
     weekEndingDate: data.weekEndingDate ?? null,
-    rewardStatus: data.rewardStatus ?? null,
-    rewardRank: data.rewardRank ?? null,
-    rewardAmount: data.rewardAmount ?? null,
     score: data.score ?? null,
     completionTimeSeconds: data.completionTimeSeconds ?? null,
     attempts: data.attempts ?? null
   };
 }
 
-async function getCompetitionEntries(weekEndingDate) {
+async function getLeaderboardEntries(weekEndingDate) {
   const db = await getDb();
-  let query = db.collection("competitionEntries");
+  let query = db.collection("leaderboard");
 
   if (weekEndingDate) {
     query = query.where("weekEndingDate", "==", weekEndingDate);
@@ -152,7 +149,7 @@ async function getCompetitionEntries(weekEndingDate) {
 
 function printEntries(entries) {
   if (entries.length === 0) {
-    console.log("No captured competition phone numbers found.");
+    console.log("No leaderboard phone numbers found.");
     return;
   }
 
@@ -162,8 +159,7 @@ function printEntries(entries) {
       playerName: entry.playerName,
       phoneNumber: entry.phoneNumber,
       weekEndingDate: entry.weekEndingDate,
-      rewardStatus: entry.rewardStatus,
-      rewardRank: entry.rewardRank
+      score: entry.score
     }))
   }, null, 2));
 }
@@ -211,7 +207,7 @@ async function main() {
   const weekEndingDate = normalizeWeekEndingDate(getArgValue("--week-ending"));
   const shouldSend = hasFlag("--send");
   const message = getArgValue("--message");
-  const entries = await getCompetitionEntries(weekEndingDate);
+  const entries = await getLeaderboardEntries(weekEndingDate);
 
   printEntries(entries);
 

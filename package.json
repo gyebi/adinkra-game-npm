@@ -7,10 +7,11 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "competition:sms-preview": "node scripts/previewWinnerSms.mjs",
-    "competition:report-preview": "node scripts/previewWinnerReport.mjs",
-    "competition:finalize": "node scripts/finalizeWeeklyCompetition.mjs",
-    "competition:sms-test": "node scripts/testAfricaTalkingSms.mjs"
+    "leaderboard:test-entry": "node scripts/createLeaderboardTestEntry.mjs",
+    "leaderboard:sms-preview": "node scripts/previewWinnerSms.mjs",
+    "leaderboard:report-preview": "node scripts/previewWinnerReport.mjs",
+    "leaderboard:finalize": "node scripts/finalizeWeeklyLeaderboard.mjs",
+    "leaderboard:sms-test": "node scripts/testAfricaTalkingSms.mjs"
   },
   "devDependencies": {
     "vite": "^8.0.0"

@@ -8,15 +8,8 @@ import sankofaImg from "./assets/assets/Sankofa.png";
 import tamfoBebreImg from "./assets/assets/Tamfo_Bebre.png";
 
 import { getCurrentUserId } from "./auth.js";
-import { renderCompetitionLeaderboard } from "./components/CompetitionLeaderboard.js";
 import { renderLeaderboard } from "./components/Leaderboard.js";
 import { saveScore } from "./services/leaderboardService.js";
-
-import {
-  getCompetitionEntry,
-  getCompetitionWeekContext,
-  saveCompetitionEntry
-} from "./services/competitionService.js";
 
 const adinkraSymbols = [
   {
@@ -79,21 +72,13 @@ const gameBoard = document.getElementById("game-board");
 const matchedList = document.getElementById("matched-list");
 const playerInput = document.getElementById("playerInput");
 const playerNameInput = document.getElementById("playerNameInput");
+const playerPhoneInput = document.getElementById("playerPhoneInput");
 const submitScoreBtn = document.getElementById("submitScore");
 const leaderboardContainer = document.getElementById("leaderboard");
 const resultsAttempts = document.getElementById("results-attempts");
 const resultsTime = document.getElementById("results-time");
 const resultsMessage = document.getElementById("results-message");
 const appBanner = document.getElementById("app-banner");
-const competitionEntryPanel = document.getElementById("competition-entry-panel");
-const competitionEntryMessage = document.getElementById("competition-entry-message");
-const competitionLeaderboardContainer = document.getElementById("competitionLeaderboard");
-const competitionPlayerRankContainer = document.getElementById("competition-player-rank");
-const competitionPhoneInput = document.getElementById("competitionPhoneInput");
-const competitionJoinBtn = document.getElementById("competitionJoinBtn");
-const competitionSkipBtn = document.getElementById("competitionSkipBtn");
-const DEFAULT_COMPETITION_JOIN_LABEL = "Join Competition";
-const UPDATE_COMPETITION_JOIN_LABEL = "Update Competition Score";
 
 const matchedSymbols = new Set();
 const cards = [...adinkraSymbols, ...adinkraSymbols];
@@ -106,7 +91,6 @@ let gameStartTime = null;
 let timerIntervalId = null;
 let completionTimeSeconds = 0;
 const scoreDisplay = document.createElement("p");
-let pendingCompetitionEntry = null;
 
 function startGame() {
   introScreen.classList.add("fade-out");
@@ -247,24 +231,14 @@ function showResultsScreen() {
   resultsAttempts.textContent = `${attempts}`;
   resultsTime.textContent = `${completionTimeSeconds}s`;
   resultsMessage.textContent =
-    "Enter your name to save this run and compare it against the top scores.";
+    "Enter your name and phone number to save this run and compare it against the top scores.";
   leaderboardContainer.classList.add("hidden");
   leaderboardContainer.innerHTML = "";
-  competitionEntryPanel.classList.add("hidden");
-  competitionLeaderboardContainer.classList.add("hidden");
-  competitionLeaderboardContainer.innerHTML = "";
-  competitionPlayerRankContainer.classList.add("hidden");
-  competitionPlayerRankContainer.innerHTML = "";
   playerInput.classList.remove("hidden");
   playerNameInput.focus();
 }
 
-function setCompetitionEntryMessage(message, isError = false) {
-  competitionEntryMessage.textContent = message;
-  competitionEntryMessage.classList.toggle("competition-message-error", isError);
-}
-
-function normalizeContactPhoneNumber(value) {
+function normalizePhoneNumber(value) {
   const compactValue = value.replace(/[\s()-]/g, "");
 
   if (/^\+233\d{9}$/.test(compactValue)) {
@@ -286,126 +260,6 @@ function normalizeContactPhoneNumber(value) {
   return null;
 }
 
-function buildCompetitionEntryMessage() {
-  const { weekEndingDate } = getCompetitionWeekContext();
-  return `Enter your phone number to join the weekly competition for the week ending ${weekEndingDate}.\nPrizes: 1st - 100 Cedis, 2nd - 50 Cedis, 3rd - 20 Cedis.`;
-}
-
-function buildCompetitionAlreadyEnteredMessage(existingEntry) {
-  const { weekEndingDate } = getCompetitionWeekContext();
-  return `You are already entered in this week's competition ending ${weekEndingDate}. Your current competition total is ${existingEntry.score}. Lower totals rank higher.`;
-}
-
-function setCompetitionActionState({
-  phoneNumber = "",
-  phoneDisabled = false,
-  joinHidden = false,
-  skipHidden = false,
-  joinDisabled = false,
-  skipDisabled = false,
-  joinLabel = DEFAULT_COMPETITION_JOIN_LABEL
-} = {}) {
-  competitionPhoneInput.value = phoneNumber;
-  competitionPhoneInput.disabled = phoneDisabled;
-  competitionJoinBtn.textContent = joinLabel;
-  competitionJoinBtn.classList.toggle("hidden", joinHidden);
-  competitionSkipBtn.classList.toggle("hidden", skipHidden);
-  competitionJoinBtn.disabled = joinDisabled;
-  competitionSkipBtn.disabled = skipDisabled;
-}
-
-async function showCompetitionLeaderboard(currentUserId) {
-  await renderCompetitionLeaderboard({ currentUserId });
-  competitionLeaderboardContainer.classList.remove("hidden");
-}
-
-async function handleCompetitionJoin() {
-  if (!pendingCompetitionEntry) {
-    setCompetitionEntryMessage(
-      "Save your score first before entering the competition.",
-      true
-    );
-    return;
-  }
-
-  const phoneNumber = normalizeContactPhoneNumber(
-    competitionPhoneInput.value.trim()
-  );
-
-  if (!phoneNumber) {
-    setCompetitionEntryMessage(
-      "Enter a valid Ghana phone number such as 055XXXXXXX or +2335555XXXXXXX.",
-      true
-    );
-    return;
-  }
-
-  competitionJoinBtn.disabled = true;
-  competitionSkipBtn.disabled = true;
-
-  let result;
-
-  try {
-    result = await saveCompetitionEntry({
-      ...pendingCompetitionEntry,
-      phoneNumber
-    });
-    console.log("record saved", {
-      flow: "competition_join",
-      result
-    });
-  } catch (error) {
-    console.error("Competition entry failed:", error);
-    setCompetitionEntryMessage(
-      "Score could not be saved. Please try again later.",
-      true
-    );
-    competitionJoinBtn.disabled = false;
-    competitionSkipBtn.disabled = false;
-    return;
-  }
-
-  if (!result.ok) {
-    const message =
-      result.reason === "competition_closed"
-        ? "This week's competition is closed, so your entry was not submitted. Please try again when the next competition opens."
-        : "Score could not be saved. Please try again later.";
-    setCompetitionEntryMessage(message, true);
-    competitionJoinBtn.disabled = false;
-    competitionSkipBtn.disabled = false;
-    return;
-  }
-
-  pendingCompetitionEntry = null;
-  setCompetitionActionState({
-    phoneNumber,
-    phoneDisabled: true,
-    joinHidden: true,
-    skipHidden: true
-  });
-  setCompetitionEntryMessage(
-    result.status === "created"
-      ? "You have joined this week's competition. The live top 3 is below."
-      : result.status === "improved"
-      ? "Your competition entry has been updated. The live top 3 is below."
-      : result.status === "unchanged"
-        ? "Your current competition entry is still better. The live top 3 is below."
-        : "You are already entered in this week's competition. The live top 3 is below."
-  );
-  await showCompetitionLeaderboard(getCurrentUserId());
-  resultsMessage.textContent =
-    result.status === "created"
-      ? "You are entered in this week's competition. The live top 3 is below."
-      : result.status === "improved"
-      ? "Your competition score has been updated. The live top 3 is below."
-      : "You are entered in this week's competition. The live top 3 is below.";
-  showBanner(
-    result.status === "improved"
-      ? `Your weekly competition entry for ${getCompetitionWeekContext().weekEndingDate} has been updated.`
-      : `You have joined the weekly competition for the week ending ${getCompetitionWeekContext().weekEndingDate}.`
-  );
-}
-
 submitScoreBtn.addEventListener("click", async () => {
   if (scoreSubmitted) return;
 
@@ -417,79 +271,69 @@ submitScoreBtn.addEventListener("click", async () => {
     return;
   }
 
-  let playerName = playerNameInput.value;
+  let playerName = playerNameInput.value.trim();
 
-  if (!playerName || playerName.trim() === "") {
+  if (!playerName) {
     playerName = "Anonymous";
+  }
+
+  const phoneNumber = normalizePhoneNumber(playerPhoneInput.value.trim());
+
+  if (!phoneNumber) {
+    resultsMessage.textContent =
+      "Enter a valid Ghana phone number such as 0559101078 or +233559101078.";
+    return;
   }
 
   console.log("🧠 Submitting player:", playerName);
 
-
-  const wasSaved = await saveScore({
+  const saveResult = await saveScore({
     userId,
     playerName,
+    phoneNumber,
     completionTimeSeconds,
     attempts
   });
 
-  if (!wasSaved) {
+  if (!saveResult.ok) {
     resultsMessage.textContent =
       "We are sorry we could not save your score right now. Try again after a while.";
     return;
   }
 
   scoreSubmitted = true;
-  pendingCompetitionEntry = {
-    userId,
-    playerName,
-    completionTimeSeconds,
-    attempts
-  };
 
-  await renderLeaderboard();
-  const existingCompetitionEntry = await getCompetitionEntry(userId);
+  const leaderboardState = await renderLeaderboard({
+    currentEntryId: saveResult.entryId
+  });
 
+  playerNameInput.value = "";
+  playerPhoneInput.value = "";
   playerInput.classList.add("hidden");
   leaderboardContainer.classList.remove("hidden");
 
-  if (existingCompetitionEntry) {
-    competitionEntryPanel.classList.remove("hidden");
-    setCompetitionActionState({
-      phoneNumber: existingCompetitionEntry.phoneNumber ?? "",
-      phoneDisabled: true,
-      joinHidden: false,
-      skipHidden: false,
-      joinDisabled: false,
-      skipDisabled: false,
-      joinLabel: UPDATE_COMPETITION_JOIN_LABEL
-    });
-    setCompetitionEntryMessage(
-      buildCompetitionAlreadyEnteredMessage(existingCompetitionEntry)
-    );
-    await showCompetitionLeaderboard(userId);
+  if (leaderboardState.currentPlayerInTopTen) {
     resultsMessage.textContent =
-      "You are already entered in this week's competition. The live top 3 is below.";
+      leaderboardState.currentPlayerRank <= 3
+        ? `Excellent work. You are currently ${leaderboardState.currentPlayerRank === 1 ? "1st" : leaderboardState.currentPlayerRank === 2 ? "2nd" : "3rd"} on the leaderboard.`
+        : `Your score was saved. You made the top 10 at position ${leaderboardState.currentPlayerRank}.`;
   } else {
-    competitionEntryPanel.classList.remove("hidden");
-    competitionLeaderboardContainer.classList.add("hidden");
-    competitionLeaderboardContainer.innerHTML = "";
-    competitionPlayerRankContainer.classList.add("hidden");
-    competitionPlayerRankContainer.innerHTML = "";
-    setCompetitionActionState();
-    setCompetitionEntryMessage(buildCompetitionEntryMessage());
     resultsMessage.textContent =
-      "Your score was saved. You can enter the weekly competition or play again.";
+      "You could not make the best 10, you can do better next time.";
   }
 
+  showBanner("Your score and phone number were saved to the leaderboard.");
   console.log("✅ Score submitted from UI");
 });
 
-playerNameInput.addEventListener("keydown", (event) => {
+function handleScoreInputKeydown(event) {
   if (event.key === "Enter") {
     submitScoreBtn.click();
   }
-});
+}
+
+playerNameInput.addEventListener("keydown", handleScoreInputKeydown);
+playerPhoneInput.addEventListener("keydown", handleScoreInputKeydown);
 
 function resetGameState() {
   attempts = 0;
@@ -510,19 +354,13 @@ function resetGameState() {
   gameBoard.innerHTML = "";
   playerInput.classList.remove("hidden");
   playerNameInput.value = "";
+  playerPhoneInput.value = "";
   leaderboardContainer.classList.add("hidden");
   leaderboardContainer.innerHTML = "";
-  competitionEntryPanel.classList.add("hidden");
-  competitionLeaderboardContainer.classList.add("hidden");
-  competitionLeaderboardContainer.innerHTML = "";
-  competitionPlayerRankContainer.classList.add("hidden");
-  competitionPlayerRankContainer.innerHTML = "";
-  setCompetitionActionState();
-  pendingCompetitionEntry = null;
   resultsAttempts.textContent = "0";
   resultsTime.textContent = "0s";
   resultsMessage.textContent =
-    "Enter your name to see how your performance compares on the leaderboard.";
+    "Enter your name and phone number to save this run and compare it against the leaderboard.";
 }
 
 function showGameScreen() {
@@ -565,17 +403,6 @@ function initializeGame() {
 
   resultsIntroBtn.addEventListener("click", () => {
     showIntroScreen();
-  });
-
-  competitionJoinBtn.addEventListener("click", () => {
-    handleCompetitionJoin();
-  });
-
-  competitionSkipBtn.addEventListener("click", () => {
-    competitionEntryPanel.classList.add("hidden");
-    pendingCompetitionEntry = null;
-    resultsMessage.textContent =
-      "Your score was saved. Play again or view the intro.";
   });
 
   const introSeen =

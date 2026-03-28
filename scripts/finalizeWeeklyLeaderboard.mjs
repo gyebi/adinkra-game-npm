@@ -56,7 +56,7 @@ async function main() {
 
   const db = getFirestore();
   const snapshot = await db
-    .collection("competitionEntries")
+    .collection("leaderboard")
     .where("weekEndingDate", "==", weekEndingDate)
     .orderBy("score", "asc")
     .orderBy("completionTimeSeconds", "asc")
@@ -64,30 +64,10 @@ async function main() {
     .get();
 
   const winners = snapshot.docs.slice(0, 3);
-  const batch = db.batch();
+  const weekRef = db.collection("leaderboardWeeks").doc(weekEndingDate);
+  const reportRef = db.collection("leaderboardWinnerReports").doc(weekEndingDate);
 
-  snapshot.docs.forEach((entryDoc, index) => {
-    const isWinner = index < 3;
-    const rewardRank = isWinner ? index + 1 : null;
-    const rewardAmount = rewardRank === 1 ? 100 : rewardRank === 2 ? 50 : rewardRank === 3 ? 20 : null;
-
-    batch.set(
-      entryDoc.ref,
-      {
-        rewardStatus: isWinner ? "won" : "not_winner",
-        rewardRank,
-        rewardAmount,
-        finalizedAt: FieldValue.serverTimestamp(),
-        updatedAt: FieldValue.serverTimestamp()
-      },
-      { merge: true }
-    );
-  });
-
-  const weekRef = db.collection("competitionWeeks").doc(weekEndingDate);
-
-  batch.set(
-    weekRef,
+  await weekRef.set(
     {
       weekEndingDate,
       timezone: "Africa/Accra",
@@ -99,27 +79,56 @@ async function main() {
     { merge: true }
   );
 
-  await batch.commit();
+  await reportRef.set(
+    {
+      weekEndingDate,
+      generatedAt: FieldValue.serverTimestamp(),
+      channel: "sms",
+      entryCount: snapshot.size,
+      winnerCount: winners.length,
+      winners: winners.map((winnerDoc, index) => {
+        const data = winnerDoc.data();
+        return {
+          rank: index + 1,
+          rewardAmount: index === 0 ? 100 : index === 1 ? 50 : 20,
+          playerName: data.playerName,
+          phoneNumber: data.phoneNumber ?? null,
+          score: data.score ?? null,
+          completionTimeSeconds: data.completionTimeSeconds,
+          attempts: data.attempts,
+          documentId: winnerDoc.id
+        };
+      })
+    },
+    { merge: true }
+  );
 
-  const summary = winners.map((winnerDoc, index) => {
-    const data = winnerDoc.data();
-    const rewardAmount = index === 0 ? 100 : index === 1 ? 50 : 20;
-    return {
-      rank: index + 1,
-      rewardAmount,
-      playerName: data.playerName,
-      phoneNumber: data.phoneNumber ?? null,
-      score: data.score ?? null,
-      completionTimeSeconds: data.completionTimeSeconds,
-      attempts: data.attempts,
-      documentId: winnerDoc.id
-    };
-  });
-
-  console.log(JSON.stringify({ weekEndingDate, winners: summary }, null, 2));
+  console.log(
+    JSON.stringify(
+      {
+        weekEndingDate,
+        entryCount: snapshot.size,
+        winners: winners.map((winnerDoc, index) => {
+          const data = winnerDoc.data();
+          return {
+            rank: index + 1,
+            rewardAmount: index === 0 ? 100 : index === 1 ? 50 : 20,
+            playerName: data.playerName,
+            phoneNumber: data.phoneNumber ?? null,
+            score: data.score ?? null,
+            completionTimeSeconds: data.completionTimeSeconds,
+            attempts: data.attempts,
+            documentId: winnerDoc.id
+          };
+        })
+      },
+      null,
+      2
+    )
+  );
 }
 
 main().catch((error) => {
-  console.error("❌ Could not finalize weekly competition:", error.message);
+  console.error("❌ Could not finalize weekly leaderboard:", error.message);
   process.exitCode = 1;
 });
