@@ -75,7 +75,7 @@ document.querySelector("#app").innerHTML = `
         <input
           id="playerPhoneInput"
           type="tel"
-          placeholder="+233559101078"
+          placeholder="+23355XXXX078"
           maxlength="16"
           autocomplete="tel"
         />
