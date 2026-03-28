@@ -406,7 +406,7 @@ footer {
   background:
     linear-gradient(140deg, rgba(255, 247, 230, 0.98), rgba(248, 236, 205, 0.95)),
     linear-gradient(140deg, #f3ddae, #f8efdc);
-  color: var(--ink);
+  color: #FFFFFF;
   text-align: left;
   box-shadow: inset 0 0 0 1px rgba(199, 141, 44, 0.18);
 }
@@ -447,7 +447,7 @@ footer {
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--clay);
+  color: #FFFFFF;
 }
 
 .competition-panel h2 {
@@ -461,7 +461,7 @@ footer {
 }
 
 .competition-message-error {
-  color: #7f2222;
+  color: #FFFFFF;
 }
 
 .competition-rewards {
@@ -488,7 +488,7 @@ footer {
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--clay);
+  color: #FFFFFF;
 }
 
 .competition-entry,
@@ -533,7 +533,7 @@ footer {
   font-weight: 700;
   cursor: pointer;
   background: linear-gradient(135deg, #1f766e, #145c63);
-  color: #fff7ea;
+  color: #FFFFFF;
 }
 
 .competition-entry button:disabled,
@@ -546,7 +546,7 @@ footer {
   margin: 14px 0 0;
   font-size: 0.82rem;
   line-height: 1.45;
-  color: rgba(20, 50, 68, 0.85);
+  color: #FFFFFF;
 }
 
 .competition-board {
@@ -568,7 +568,7 @@ footer {
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--teal);
+  color: #FFFFFF;
 }
 
 .competition-board-header h3 {
@@ -580,7 +580,7 @@ footer {
   margin: 0;
   font-size: 0.82rem;
   line-height: 1.4;
-  color: rgba(20, 50, 68, 0.84);
+  color: #FFFFFF;
 }
 
 .competition-board-list {
@@ -609,7 +609,7 @@ footer {
   height: 42px;
   border-radius: 999px;
   background: linear-gradient(135deg, #f0b847, #c78d2c);
-  color: #fffaf0;
+  color: #FFFFFF;
   font-weight: 800;
 }
 
@@ -624,13 +624,13 @@ footer {
 
 .competition-board-player span {
   font-size: 0.82rem;
-  color: rgba(20, 50, 68, 0.78);
+  color: #FFFFFF;
 }
 
 .competition-board-reward {
   font-size: 0.8rem;
   font-weight: 700;
-  color: var(--clay);
+  color: #FFFFFF;
 }
 
 .competition-board-empty {
@@ -652,7 +652,7 @@ footer {
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--clay);
+  color: #FFFFFF;
 }
 
 .competition-player-rank-row {
