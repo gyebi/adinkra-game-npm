@@ -14,40 +14,76 @@ document.querySelector("#app").innerHTML = `
   <div id="app-banner" class="app-banner hidden"></div>
 
   <div id="intro-screen">
-    <h1>Adinkra Symbols</h1>
-    <p>
-      Adinkra symbols are visual symbols from the Akan people of Ghana. Each
-      symbol represents a concept, proverb, or life philosophy. Originating
-      over 300 years ago, they were traditionally used by royalty during
-      important ceremonies.
-    </p>
-    <p>
-      Today, Adinkra symbols are recognized globally as powerful expressions
-      of African wisdom, culture, and identity.
-    </p>
+    <div class="intro-shell">
+      <p class="screen-kicker">Adinkra Challenge</p>
+      <h1>Adinkra Symbols</h1>
+      <p class="intro-lead">
+        Match sacred Akan symbols, learn their meanings, and climb the weekly leaderboard.
+      </p>
 
-    <div class="game-instructions">
-      <h2>How to Play</h2>
-      <ol>
-        <li>Click on a card to reveal an Adinkra symbol.</li>
-        <li>Find the matching symbol.</li>
-        <li>Matched pairs stay open to reveal the symbol's name and meaning.</li>
-        <li>Match all Adinkra symbols to win the game.</li>
-      </ol>
+      <div class="intro-story">
+        <p>
+          Adinkra symbols are visual symbols from the Akan people of Ghana. Each
+          symbol represents a concept, proverb, or life philosophy.
+        </p>
+        <p>
+          Today, Adinkra symbols remain powerful expressions of African wisdom,
+          culture, identity, and resilience.
+        </p>
+      </div>
+
+      <div class="prize-strip" aria-label="Weekly prizes">
+        <article class="prize-card">
+          <span class="prize-medal">🥇</span>
+          <strong>100 Cedis</strong>
+          <span>1st Place</span>
+        </article>
+        <article class="prize-card">
+          <span class="prize-medal">🥈</span>
+          <strong>50 Cedis</strong>
+          <span>2nd Place</span>
+        </article>
+        <article class="prize-card">
+          <span class="prize-medal">🥉</span>
+          <strong>20 Cedis</strong>
+          <span>3rd Place</span>
+        </article>
+      </div>
+
+      <div class="game-instructions">
+        <h2>How to Play</h2>
+        <ol>
+          <li>Click on a card to reveal an Adinkra symbol.</li>
+          <li>Find the matching symbol.</li>
+          <li>Matched pairs stay open to reveal the symbol's name and meaning.</li>
+          <li>Finish quickly with fewer attempts to improve your rank.</li>
+        </ol>
+      </div>
+
+      <button class="skip-intro-btn">Start Game</button>
     </div>
-
-    <button class="skip-intro-btn">Start Game</button>
   </div>
 
   <div id="game-screen" class="hidden">
-    <h1>Adinkra Game</h1>
-    <div id="game-board"></div>
+    <div class="game-shell">
+      <div class="game-topbar">
+        <div>
+          <p class="screen-kicker">Live Round</p>
+          <h1>Adinkra Game</h1>
+        </div>
+      </div>
 
-    <button id="restart-btn">Restart Game</button>
-    <button id="show-intro-btn">View Intro</button>
+      <div id="game-board"></div>
 
-    <div class="info-panel">
-      <ul id="matched-list"></ul>
+      <div class="game-actions">
+        <button id="restart-btn">Restart Game</button>
+        <button id="show-intro-btn">View Intro</button>
+      </div>
+
+      <div class="info-panel">
+        <p class="info-panel-label">Matched Meanings</p>
+        <ul id="matched-list"></ul>
+      </div>
     </div>
   </div>
 

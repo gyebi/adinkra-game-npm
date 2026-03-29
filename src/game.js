@@ -91,6 +91,7 @@ let gameStartTime = null;
 let timerIntervalId = null;
 let completionTimeSeconds = 0;
 const scoreDisplay = document.createElement("p");
+scoreDisplay.className = "score-hud";
 
 function startGame() {
   introScreen.classList.add("fade-out");
@@ -379,7 +380,7 @@ function showIntroScreen() {
 }
 
 function initializeGame() {
-  gameScreen.insertBefore(scoreDisplay, gameBoard);
+  gameBoard.parentNode.insertBefore(scoreDisplay, gameBoard);
   updateScore();
 
   skipBtn.addEventListener("click", () => {
